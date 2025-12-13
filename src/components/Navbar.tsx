@@ -1,7 +1,9 @@
 import { motion } from "framer-motion";
-import { ShoppingBag, Blocks } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { ShoppingBag, Menu, X } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 interface NavbarProps {
   onCartClick: () => void;
@@ -9,6 +11,13 @@ interface NavbarProps {
 
 const Navbar = ({ onCartClick }: NavbarProps) => {
   const { itemCount } = useCart();
+  const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const links = [
+    { href: "/", label: "Inicio" },
+    { href: "/catalogo", label: "Catálogo" },
+  ];
 
   return (
     <motion.nav
@@ -18,37 +27,110 @@ const Navbar = ({ onCartClick }: NavbarProps) => {
     >
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <motion.div
-            className="flex items-center gap-3"
-            whileHover={{ scale: 1.02 }}
-          >
-            <div className="relative">
-              <Blocks className="w-8 h-8 text-primary" />
-              <div className="absolute inset-0 blur-lg bg-primary/50" />
-            </div>
-            <h1 className="font-display text-xl md:text-2xl font-bold neon-text">
-              LEGO <span className="text-secondary neon-text-magenta">VAULT</span>
-            </h1>
-          </motion.div>
+          {/* Logo */}
+          <Link to="/">
+            <motion.div
+              className="flex items-center gap-2"
+              whileHover={{ scale: 1.02 }}
+            >
+              <h1 className="font-display text-xl md:text-2xl font-bold neon-text">
+                Mike<span className="text-secondary neon-text-magenta">&Co</span>
+              </h1>
+            </motion.div>
+          </Link>
 
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={onCartClick}
-            className="relative neon-border hover-glow bg-transparent"
-          >
-            <ShoppingBag className="w-5 h-5 text-primary" />
-            {itemCount > 0 && (
-              <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute -top-2 -right-2 w-5 h-5 bg-secondary text-secondary-foreground text-xs font-bold rounded-full flex items-center justify-center"
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-8">
+            {links.map((link) => (
+              <Link
+                key={link.href}
+                to={link.href}
+                className={`text-sm font-medium transition-colors ${
+                  location.pathname === link.href
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
               >
-                {itemCount}
-              </motion.span>
-            )}
-          </Button>
+                {link.label}
+              </Link>
+            ))}
+            <Link
+              to="/login"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Admin
+            </Link>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onCartClick}
+              className="relative neon-border hover-glow bg-transparent"
+            >
+              <ShoppingBag className="w-5 h-5 text-primary" />
+              {itemCount > 0 && (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-2 -right-2 w-5 h-5 bg-secondary text-secondary-foreground text-xs font-bold rounded-full flex items-center justify-center"
+                >
+                  {itemCount}
+                </motion.span>
+              )}
+            </Button>
+
+            {/* Mobile Menu Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <Menu className="w-5 h-5" />
+              )}
+            </Button>
+          </div>
         </div>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden pt-4 pb-2 border-t border-border mt-4"
+          >
+            <div className="flex flex-col gap-2">
+              {links.map((link) => (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`py-2 text-sm font-medium transition-colors ${
+                    location.pathname === link.href
+                      ? "text-primary"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <Link
+                to="/login"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="py-2 text-sm font-medium text-muted-foreground"
+              >
+                Admin
+              </Link>
+            </div>
+          </motion.div>
+        )}
       </div>
     </motion.nav>
   );

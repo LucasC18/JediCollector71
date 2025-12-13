@@ -1,47 +1,20 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
-import SearchBar from "@/components/SearchBar";
-import Filters from "@/components/Filters";
 import ProductGrid from "@/components/ProductGrid";
 import CartDrawer from "@/components/CartDrawer";
-import { products } from "@/data/products";
-import { Category } from "@/types/product";
-import { Sparkles, ChevronDown } from "lucide-react";
+import { useProducts } from "@/context/ProductContext";
+import { Sparkles, ChevronDown, ArrowRight } from "lucide-react";
 import heroImage from "@/assets/hero-starwars.jpg";
 
-const Index = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState<Category[]>([]);
-  const [showOnlyInStock, setShowOnlyInStock] = useState(false);
+const Home = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
-
-  const handleCategoryToggle = (category: Category) => {
-    setSelectedCategories((prev) =>
-      prev.includes(category)
-        ? prev.filter((c) => c !== category)
-        : [...prev, category]
-    );
-  };
-
-  const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      const matchesSearch = product.name
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-
-      const matchesCategory =
-        selectedCategories.length === 0 ||
-        selectedCategories.includes(product.category as Category);
-
-      const matchesStock = !showOnlyInStock || product.inStock;
-
-      return matchesSearch && matchesCategory && matchesStock;
-    });
-  }, [searchQuery, selectedCategories, showOnlyInStock]);
+  const { getFeaturedProducts } = useProducts();
+  const featuredProducts = getFeaturedProducts();
 
   const scrollToProducts = () => {
-    document.getElementById("productos")?.scrollIntoView({ behavior: "smooth" });
+    document.getElementById("destacados")?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
@@ -50,7 +23,6 @@ const Index = () => {
 
       {/* Epic Hero Section */}
       <section className="relative h-screen overflow-hidden">
-        {/* Background Image */}
         <motion.div
           initial={{ scale: 1.1 }}
           animate={{ scale: 1 }}
@@ -59,14 +31,13 @@ const Index = () => {
         >
           <img
             src={heroImage}
-            alt="LEGO Star Wars Epic Battle"
+            alt="Mike&Co LEGO Collection"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-background/80" />
         </motion.div>
 
-        {/* Content */}
         <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-4">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
@@ -82,10 +53,9 @@ const Index = () => {
 
             <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-bold mb-6">
               <span className="text-foreground drop-shadow-[0_0_30px_rgba(0,255,255,0.5)]">
-                LEGO
+                Mike
               </span>
-              <br />
-              <span className="text-gradient">VAULT</span>
+              <span className="text-gradient">&Co</span>
             </h1>
 
             <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto mb-10">
@@ -99,11 +69,10 @@ const Index = () => {
               whileTap={{ scale: 0.95 }}
               className="px-8 py-4 bg-primary text-primary-foreground font-display font-bold text-lg rounded-lg neon-glow hover:bg-primary/90 transition-colors"
             >
-              Ver Colección
+              Ver Destacados
             </motion.button>
           </motion.div>
 
-          {/* Scroll indicator */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -123,47 +92,44 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Products Section */}
-      <main id="productos" className="container mx-auto px-4 py-20 bg-grid">
-        {/* Search and Filters */}
-        <div className="space-y-6 mb-10">
-          <div className="flex justify-center">
-            <SearchBar value={searchQuery} onChange={setSearchQuery} />
-          </div>
-
-          <Filters
-            selectedCategories={selectedCategories}
-            onCategoryToggle={handleCategoryToggle}
-            showOnlyInStock={showOnlyInStock}
-            onStockFilterChange={setShowOnlyInStock}
-          />
+      {/* Featured Products Section */}
+      <main id="destacados" className="container mx-auto px-4 py-20 bg-grid">
+        <div className="text-center mb-12">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="font-display text-3xl md:text-4xl font-bold mb-4"
+          >
+            <span className="text-foreground">Productos </span>
+            <span className="text-gradient">Destacados</span>
+          </motion.h2>
+          <p className="text-muted-foreground">
+            Los sets más populares de nuestra colección
+          </p>
         </div>
 
-        {/* Results count */}
+        <ProductGrid products={featuredProducts} />
+
         <motion.div
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="mb-6"
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="flex justify-center mt-12"
         >
-          <p className="text-muted-foreground text-sm">
-            Mostrando{" "}
-            <span className="text-primary font-semibold">
-              {filteredProducts.length}
-            </span>{" "}
-            de{" "}
-            <span className="text-primary font-semibold">{products.length}</span>{" "}
-            productos
-          </p>
+          <Link
+            to="/catalogo"
+            className="inline-flex items-center gap-2 px-8 py-4 glass-card neon-border rounded-lg font-display font-semibold text-primary hover-glow transition-all group"
+          >
+            Ver Catálogo Completo
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          </Link>
         </motion.div>
-
-        {/* Product Grid */}
-        <ProductGrid products={filteredProducts} />
       </main>
 
-      {/* Cart Drawer */}
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </div>
   );
 };
 
-export default Index;
+export default Home;
