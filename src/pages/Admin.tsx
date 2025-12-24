@@ -109,6 +109,29 @@ const EMPTY_FORM: ProductFormState = {
   stockQty: 0,
 };
 
+function mapAdminProducts(
+  items: ProductApiDTO[],
+  categories: Category[]
+): AdminProduct[] {
+  return items.map((p) => {
+    const category =
+      p.categoryName ??
+      categories.find((c) => c.id === p.categoryId)?.name ??
+      "Sin categoría";
+
+    return {
+      id: p.id,
+      name: p.name,
+      image: p.image ?? p.imageUrl ?? "",
+      category,
+      categoryId: p.categoryId ?? undefined,
+      description: p.description ?? "",
+      inStock: p.inStock,
+      stockQty: p.stockQty ?? 0,
+    };
+  });
+}
+
 function getErrorMessage(err: unknown): string {
   if (err && typeof err === "object") {
     const e = err as ApiError;
@@ -143,35 +166,17 @@ const Admin = () => {
 
     async function loadData() {
       try {
+        // 1️⃣ Cargar categorías
         const categoriesRes = await apiFetch<Category[]>("/api/v1/categories");
         setCategories(categoriesRes);
 
+        // 2️⃣ Cargar productos
         const productsRes = await apiFetch<{ items: ProductApiDTO[] }>(
           "/api/v1/admin/products",
           { auth: true }
         );
 
-        const mappedProducts: AdminProduct[] = productsRes.items.map((p) => {
-          let categoryName = p.categoryName;
-
-          if (!categoryName && p.categoryId) {
-            const category = categoriesRes.find((c) => c.id === p.categoryId);
-            categoryName = category?.name ?? "Sin categoría";
-          }
-
-          return {
-            id: p.id,
-            name: p.name,
-            image: p.image ?? p.imageUrl ?? "",
-            category: categoryName ?? "Sin categoría",
-            categoryId: p.categoryId ?? undefined,
-            description: p.description ?? "",
-            inStock: p.inStock,
-            stockQty: p.stockQty ?? 0,
-          };
-        });
-
-        setProducts(mappedProducts);
+        setProducts(mapAdminProducts(productsRes.items, categoriesRes));
       } catch (error: unknown) {
         toast({
           title: "Error",
@@ -183,10 +188,6 @@ const Admin = () => {
 
     loadData();
   }, [isAuthenticated, toast]);
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
 
   const openCreate = () => {
     setEditing(null);
@@ -312,17 +313,20 @@ const Admin = () => {
         );
         productId = updated.id;
       } else {
-        const created = await apiFetch<ProductApiDTO>("/api/v1/admin/products", {
-          method: "POST",
-          auth: true,
-          body: JSON.stringify({
-            name: form.name,
-            description: form.description,
-            categoryId: form.categoryId,
-            inStock: form.inStock,
-            stockQty: form.stockQty,
-          }),
-        });
+        const created = await apiFetch<ProductApiDTO>(
+          "/api/v1/admin/products",
+          {
+            method: "POST",
+            auth: true,
+            body: JSON.stringify({
+              name: form.name,
+              description: form.description,
+              categoryId: form.categoryId,
+              inStock: form.inStock,
+              stockQty: form.stockQty,
+            }),
+          }
+        );
         productId = created.id;
       }
 
@@ -345,27 +349,7 @@ const Admin = () => {
         { auth: true }
       );
 
-      const mappedProducts: AdminProduct[] = res.items.map((p) => {
-        let categoryName = p.categoryName;
-
-        if (!categoryName && p.categoryId) {
-          const category = categories.find((c) => c.id === p.categoryId);
-          categoryName = category?.name ?? "Sin categoría";
-        }
-
-        return {
-          id: p.id,
-          name: p.name,
-          image: p.image ?? p.imageUrl ?? "",
-          category: categoryName ?? "Sin categoría",
-          categoryId: p.categoryId ?? undefined,
-          description: p.description ?? "",
-          inStock: p.inStock,
-          stockQty: p.stockQty ?? 0,
-        };
-      });
-
-      setProducts(mappedProducts);
+      setProducts(mapAdminProducts(res.items, categories));
 
       toast({
         title: "Éxito",
@@ -555,7 +539,9 @@ const Admin = () => {
                         />
                         <span
                           className={`text-xs font-medium ${
-                            product.inStock ? "text-emerald-400" : "text-rose-400"
+                            product.inStock
+                              ? "text-emerald-400"
+                              : "text-rose-400"
                           }`}
                         >
                           {product.inStock ? "Disponible" : "Sin stock"}
