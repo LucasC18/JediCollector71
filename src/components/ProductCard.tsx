@@ -59,7 +59,7 @@ const ProductCard = React.forwardRef<HTMLElement, ProductCardProps>(
         transition={{ delay: index * 0.05, duration: 0.35 }}
         whileHover={{ y: -6 }}
         onClick={() => onOpenDetail?.(product)}
-        className="group relative glass-card rounded-xl overflow-hidden hover-glow cursor-pointer"
+        className="group relative glass-card rounded-xl overflow-hidden hover-glow cursor-pointer flex flex-col h-full"
       >
         {/* IMAGE */}
         <div className="relative aspect-square overflow-hidden">

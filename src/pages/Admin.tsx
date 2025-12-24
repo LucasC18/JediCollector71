@@ -15,9 +15,6 @@ import {
   Trash2,
   LogOut,
   Package,
-  Check,
-  X,
-  TrendingUp,
   AlertCircle,
   CheckCircle,
 } from "lucide-react";
@@ -83,12 +80,10 @@ interface ApiError {
   error?: string;
 }
 
-/** Tipo sólo para Admin (evita any) */
 interface AdminProduct extends Product {
   categoryId?: string;
 }
 
-/* ======================= FORM ======================= */
 interface ProductFormState {
   name: string;
   categoryId: string;
@@ -109,21 +104,17 @@ const EMPTY_FORM: ProductFormState = {
   stockQty: 0,
 };
 
-
 function mapAdminProducts(
   items: ProductApiDTO[],
   categories: Category[]
 ): AdminProduct[] {
   return items.map((p) => {
-    // Primero intentar con categoryName de la API
     let category = p.categoryName;
     
-    // Si no existe, buscar por categoryId
     if (!category && p.categoryId) {
       category = categories.find((c) => c.id === p.categoryId)?.name;
     }
     
-    // Fallback
     if (!category) {
       category = "Sin categoría";
     }
@@ -160,11 +151,8 @@ const Admin = () => {
   const [editing, setEditing] = useState<AdminProduct | null>(null);
   const [form, setForm] = useState<ProductFormState>(EMPTY_FORM);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [productToDelete, setProductToDelete] = useState<AdminProduct | null>(
-    null
-  );
+  const [productToDelete, setProductToDelete] = useState<AdminProduct | null>(null);
 
-  // Calcular estadísticas
   const totalProducts = products.length;
   const inStockProducts = products.filter((p) => p.inStock).length;
   const outOfStockProducts = products.filter((p) => !p.inStock).length;
@@ -175,11 +163,9 @@ const Admin = () => {
 
     async function loadData() {
       try {
-        // 1️⃣ Cargar categorías
         const categoriesRes = await apiFetch<Category[]>("/api/v1/categories");
         setCategories(categoriesRes);
 
-        // 2️⃣ Cargar productos
         const productsRes = await apiFetch<{ items: ProductApiDTO[] }>(
           "/api/v1/admin/products",
           { auth: true }
@@ -189,7 +175,7 @@ const Admin = () => {
       } catch (error: unknown) {
         toast({
           title: "Error",
-          description: getErrorMessage(error) ?? "Error cargando datos",
+          description: getErrorMessage(error),
           variant: "destructive",
         });
       }
@@ -206,8 +192,7 @@ const Admin = () => {
 
   const openEdit = (p: AdminProduct) => {
     setEditing(p);
-    const categoryId =
-      p.categoryId ?? categories.find((c) => c.name === p.category)?.id ?? "";
+    const categoryId = p.categoryId ?? categories.find((c) => c.name === p.category)?.id ?? "";
 
     setForm({
       name: p.name,
@@ -226,43 +211,33 @@ const Admin = () => {
     setDeleteDialogOpen(true);
   };
 
-  /* ======================= TOGGLE STOCK ======================= */
   const toggleStock = async (product: AdminProduct) => {
     try {
       const newInStock = !product.inStock;
 
-      // ✅ PATCH mínimo: sólo actualiza disponibilidad (sin exigir name/description)
       await apiFetch(`/api/v1/admin/products/${product.id}`, {
         method: "PUT",
         auth: true,
-        body: JSON.stringify({
-          inStock: newInStock,
-        }),
+        body: JSON.stringify({ inStock: newInStock }),
       });
 
-      // Actualizar localmente (safe)
       setProducts((prev) =>
-        prev.map((p) =>
-          p.id === product.id ? { ...p, inStock: newInStock } : p
-        )
+        prev.map((p) => (p.id === product.id ? { ...p, inStock: newInStock } : p))
       );
 
       toast({
         title: "Actualizado",
-        description: `${product.name} ahora está ${
-          newInStock ? "disponible" : "sin stock"
-        }`,
+        description: `${product.name} ahora está ${newInStock ? "disponible" : "sin stock"}`,
       });
     } catch (error: unknown) {
       toast({
         title: "Error",
-        description: getErrorMessage(error) ?? "Error actualizando stock",
+        description: getErrorMessage(error),
         variant: "destructive",
       });
     }
   };
 
-  /* ======================= DELETE ======================= */
   const handleDelete = async () => {
     if (!productToDelete) return;
 
@@ -283,13 +258,12 @@ const Admin = () => {
     } catch (error: unknown) {
       toast({
         title: "Error",
-        description: getErrorMessage(error) ?? "Error eliminando producto",
+        description: getErrorMessage(error),
         variant: "destructive",
       });
     }
   };
 
-  /* ======================= SUBMIT ======================= */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -322,20 +296,17 @@ const Admin = () => {
         );
         productId = updated.id;
       } else {
-        const created = await apiFetch<ProductApiDTO>(
-          "/api/v1/admin/products",
-          {
-            method: "POST",
-            auth: true,
-            body: JSON.stringify({
-              name: form.name,
-              description: form.description,
-              categoryId: form.categoryId,
-              inStock: form.inStock,
-              stockQty: form.stockQty,
-            }),
-          }
-        );
+        const created = await apiFetch<ProductApiDTO>("/api/v1/admin/products", {
+          method: "POST",
+          auth: true,
+          body: JSON.stringify({
+            name: form.name,
+            description: form.description,
+            categoryId: form.categoryId,
+            inStock: form.inStock,
+            stockQty: form.stockQty,
+          }),
+        });
         productId = created.id;
       }
 
@@ -362,20 +333,21 @@ const Admin = () => {
 
       toast({
         title: "Éxito",
-        description: editing
-          ? "Producto actualizado correctamente"
-          : "Producto creado correctamente",
+        description: editing ? "Producto actualizado correctamente" : "Producto creado correctamente",
       });
     } catch (error: unknown) {
       toast({
         title: "Error",
-        description: getErrorMessage(error) ?? "Error guardando producto",
+        description: getErrorMessage(error),
         variant: "destructive",
       });
     }
   };
 
-  /* ======================= UI ======================= */
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <header className="sticky top-0 z-50 bg-black/40 backdrop-blur-xl border-b border-white/10">
@@ -388,11 +360,7 @@ const Admin = () => {
               Panel Admin
             </span>
           </h1>
-          <Button
-            variant="ghost"
-            onClick={logout}
-            className="hover:bg-white/10"
-          >
+          <Button variant="ghost" onClick={logout} className="hover:bg-white/10">
             <LogOut className="w-4 h-4 mr-2" />
             Salir
           </Button>
@@ -400,7 +368,6 @@ const Admin = () => {
       </header>
 
       <main className="container mx-auto px-6 py-10 space-y-8">
-        {/* Estadísticas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/10 border-purple-500/20 backdrop-blur">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -410,9 +377,7 @@ const Admin = () => {
               <Package className="w-5 h-5 text-purple-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-white">
-                {totalProducts}
-              </div>
+              <div className="text-3xl font-bold text-white">{totalProducts}</div>
               <p className="text-xs text-purple-300 mt-1">En tu catálogo</p>
             </CardContent>
           </Card>
@@ -425,12 +390,8 @@ const Admin = () => {
               <CheckCircle className="w-5 h-5 text-emerald-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-white">
-                {inStockProducts}
-              </div>
-              <p className="text-xs text-emerald-300 mt-1">
-                Disponibles para venta
-              </p>
+              <div className="text-3xl font-bold text-white">{inStockProducts}</div>
+              <p className="text-xs text-emerald-300 mt-1">Disponibles para venta</p>
             </CardContent>
           </Card>
 
@@ -442,9 +403,7 @@ const Admin = () => {
               <AlertCircle className="w-5 h-5 text-rose-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-white">
-                {outOfStockProducts}
-              </div>
+              <div className="text-3xl font-bold text-white">{outOfStockProducts}</div>
               <p className="text-xs text-rose-300 mt-1">Requieren atención</p>
             </CardContent>
           </Card>
@@ -452,12 +411,8 @@ const Admin = () => {
 
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-2xl font-bold text-white">
-              Gestión de Productos
-            </h2>
-            <p className="text-sm text-gray-400 mt-1">
-              Administra tu inventario completo
-            </p>
+            <h2 className="text-2xl font-bold text-white">Gestión de Productos</h2>
+            <p className="text-sm text-gray-400 mt-1">Administra tu inventario completo</p>
           </div>
           <Button
             onClick={openCreate}
@@ -478,9 +433,7 @@ const Admin = () => {
                 <TableHead className="text-gray-300">Descripción</TableHead>
                 <TableHead className="text-gray-300">Stock</TableHead>
                 <TableHead className="text-gray-300">Disponible</TableHead>
-                <TableHead className="text-right text-gray-300">
-                  Acciones
-                </TableHead>
+                <TableHead className="text-right text-gray-300">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -548,9 +501,7 @@ const Admin = () => {
                         />
                         <span
                           className={`text-xs font-medium ${
-                            product.inStock
-                              ? "text-emerald-400"
-                              : "text-rose-400"
+                            product.inStock ? "text-emerald-400" : "text-rose-400"
                           }`}
                         >
                           {product.inStock ? "Disponible" : "Sin stock"}
@@ -595,9 +546,7 @@ const Admin = () => {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">
-                Nombre
-              </label>
+              <label className="text-sm font-medium text-gray-300">Nombre</label>
               <Input
                 placeholder="Ej: Pizza Margherita"
                 value={form.name}
@@ -607,29 +556,21 @@ const Admin = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">
-                Descripción
-              </label>
+              <label className="text-sm font-medium text-gray-300">Descripción</label>
               <Textarea
                 placeholder="Describe el producto..."
                 value={form.description}
                 rows={4}
-                onChange={(e) =>
-                  setForm({ ...form, description: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
                 className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">
-                Categoría
-              </label>
+              <label className="text-sm font-medium text-gray-300">Categoría</label>
               <Select
                 value={form.categoryId}
-                onValueChange={(value) =>
-                  setForm({ ...form, categoryId: value })
-                }
+                onValueChange={(value) => setForm({ ...form, categoryId: value })}
               >
                 <SelectTrigger className="bg-white/5 border-white/10 text-white">
                   <SelectValue placeholder="Seleccionar categoría" />
@@ -645,9 +586,7 @@ const Admin = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">
-                Imagen
-              </label>
+              <label className="text-sm font-medium text-gray-300">Imagen</label>
               <ImageDropzone
                 preview={form.imagePreview}
                 onImageSelect={(file) => setForm({ ...form, imageFile: file })}
@@ -662,9 +601,7 @@ const Admin = () => {
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10">
                   <Switch
                     checked={form.inStock}
-                    onCheckedChange={(checked) =>
-                      setForm({ ...form, inStock: checked })
-                    }
+                    onCheckedChange={(checked) => setForm({ ...form, inStock: checked })}
                     className="data-[state=checked]:bg-emerald-500"
                   />
                   <span className="text-sm text-white">
@@ -683,10 +620,7 @@ const Admin = () => {
                   placeholder="0"
                   value={form.stockQty || ""}
                   onChange={(e) =>
-                    setForm({
-                      ...form,
-                      stockQty: parseInt(e.target.value) || 0,
-                    })
+                    setForm({ ...form, stockQty: parseInt(e.target.value) || 0 })
                   }
                   className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
                 />
@@ -716,12 +650,10 @@ const Admin = () => {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent className="bg-slate-900 border-white/10">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-white">
-              ¿Estás seguro?
-            </AlertDialogTitle>
+            <AlertDialogTitle className="text-white">¿Estás seguro?</AlertDialogTitle>
             <AlertDialogDescription className="text-gray-400">
-              Esta acción no se puede deshacer. Se eliminará permanentemente el
-              producto "{productToDelete?.name}".
+              Esta acción no se puede deshacer. Se eliminará permanentemente el producto "
+              {productToDelete?.name}".
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
