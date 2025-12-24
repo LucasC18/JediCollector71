@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { PackageSearch } from "lucide-react";
 
 import { Product } from "@/types/product";
@@ -45,7 +45,7 @@ const ProductGrid = ({ products, onClearFilters }: ProductGridProps) => {
   }
 
   /* ===============================
-     GRID MEJORADO
+     GRID CORREGIDO
   =============================== */
   return (
     <>
@@ -60,31 +60,28 @@ const ProductGrid = ({ products, onClearFilters }: ProductGridProps) => {
           w-full
           px-4
           sm:px-0
+          items-stretch
         "
       >
-        <AnimatePresence mode="popLayout">
-          {products.map((product, index) => (
-            <motion.div
-              key={product.id}
-              layout
-              className="w-full flex"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{
-                duration: 0.25,
-                delay: index * 0.03,
-                ease: "easeOut",
-              }}
-            >
-              <ProductCard
-                product={product}
-                index={index}
-                onOpenDetail={setSelected}
-              />
-            </motion.div>
-          ))}
-        </AnimatePresence>
+        {products.map((product, index) => (
+          <motion.div
+            key={product.id}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 0.25,
+              delay: index * 0.04,
+              ease: "easeOut",
+            }}
+            className="h-full"
+          >
+            <ProductCard
+              product={product}
+              index={index}
+              onOpenDetail={setSelected}
+            />
+          </motion.div>
+        ))}
       </div>
 
       {/* ===============================
