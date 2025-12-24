@@ -52,7 +52,7 @@ const ProductCard = React.forwardRef<HTMLElement, ProductCardProps>(
     }
 
     return (
-      <motion.article
+        <motion.article
         ref={ref}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

@@ -109,12 +109,23 @@ function mapAdminProducts(
   categories: Category[]
 ): AdminProduct[] {
   return items.map((p) => {
-    let category = p.categoryName;
+    // Debug: ver qué trae la API
+    console.log('Product from API:', {
+      id: p.id,
+      name: p.name,
+      categoryId: p.categoryId,
+      categoryName: p.categoryName
+    });
     
+    // Primero intentar con categoryName de la API
+    let category = p.categoryName ?? undefined;
+    
+    // Si no existe o es null, buscar por categoryId
     if (!category && p.categoryId) {
       category = categories.find((c) => c.id === p.categoryId)?.name;
     }
     
+    // Fallback
     if (!category) {
       category = "Sin categoría";
     }
