@@ -67,9 +67,14 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
         response.whatsappMessage
       )}`;
 
-      // En móvil, usar location.href para evitar bloqueos del navegador
-      // WhatsApp detecta automáticamente si debe abrir la app o web
-      window.location.href = whatsappUrl;
+      // Crear un link y hacer click para que funcione en Safari iOS
+      const link = document.createElement('a');
+      link.href = whatsappUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
       clearCart();
       onClose();
