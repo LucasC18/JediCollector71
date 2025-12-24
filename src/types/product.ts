@@ -1,20 +1,15 @@
 export interface Product {
   id: string;
   name: string;
-  category: string;
-  image: string;
+  category: string | null;
+  categorySlug?: string | null;
+  description: string;
   inStock: boolean;
-}
+  image: string;
 
-export type Category = 
-  | "Star Wars"
-  | "Harry Potter"
-  | "Marvel"
-  | "DC Comics"
-  | "Technic"
-  | "City"
-  | "Creator"
-  | "Ideas";
+  // Solo admin (backend lo devuelve en /admin/products)
+  stockQty?: number | null;
+}
 
 export interface CartItem extends Product {
   quantity: number;

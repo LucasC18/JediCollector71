@@ -1,37 +1,34 @@
-import { useState } from "react";
-import { Navigate, Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { useProducts } from "@/context/ProductContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { categories } from "@/data/products";
-import { Product, Category } from "@/types/product";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { ImageDropzone } from "@/components/ImageDropzone";
+import { apiFetch } from "@/config/api";
+import { Product } from "@/types/product";
+
 import {
   Plus,
   Pencil,
   Trash2,
   LogOut,
-  ArrowLeft,
   Package,
   Check,
   X,
+  TrendingUp,
+  AlertCircle,
+  CheckCircle,
 } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
+
 import {
   Table,
   TableBody,
@@ -40,334 +37,711 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+
+/* ======================= TYPES ======================= */
+interface Category {
+  id: string;
+  name: string;
+}
+
+interface ProductApiDTO {
+  id: string;
+  name: string;
+  image?: string | null;
+  imageUrl?: string | null;
+  categoryId?: string | null;
+  categoryName?: string | null;
+  description?: string | null;
+  inStock: boolean;
+  stockQty?: number | null;
+}
+
+interface ApiError {
+  message?: string;
+  error?: string;
+}
+
+/** Tipo sólo para Admin (evita any) */
+interface AdminProduct extends Product {
+  categoryId?: string;
+}
+
+/* ======================= FORM ======================= */
+interface ProductFormState {
+  name: string;
+  categoryId: string;
+  description: string;
+  imageFile: File | null;
+  imagePreview: string;
+  inStock: boolean;
+  stockQty: number;
+}
+
+const EMPTY_FORM: ProductFormState = {
+  name: "",
+  categoryId: "",
+  description: "",
+  imageFile: null,
+  imagePreview: "",
+  inStock: true,
+  stockQty: 0,
+};
+
+function getErrorMessage(err: unknown): string {
+  if (err && typeof err === "object") {
+    const e = err as ApiError;
+    return e.message ?? e.error ?? "Error inesperado";
+  }
+  if (typeof err === "string") return err;
+  return "Error inesperado";
+}
 
 const Admin = () => {
   const { isAuthenticated, logout } = useAuth();
-  const { products, addProduct, updateProduct, deleteProduct } = useProducts();
   const { toast } = useToast();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    category: "Star Wars" as Category,
-    image: "",
-    inStock: true,
-  });
+
+  const [products, setProducts] = useState<AdminProduct[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<AdminProduct | null>(null);
+  const [form, setForm] = useState<ProductFormState>(EMPTY_FORM);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<AdminProduct | null>(
+    null
+  );
+
+  // Calcular estadísticas
+  const totalProducts = products.length;
+  const inStockProducts = products.filter((p) => p.inStock).length;
+  const outOfStockProducts = products.filter((p) => !p.inStock).length;
+
+  /* ======================= LOAD ======================= */
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    async function loadData() {
+      try {
+        const categoriesRes = await apiFetch<Category[]>("/categories");
+        setCategories(categoriesRes);
+
+        const productsRes = await apiFetch<{ items: ProductApiDTO[] }>(
+          "/admin/products",
+          { auth: true }
+        );
+
+        const mappedProducts: AdminProduct[] = productsRes.items.map((p) => {
+          let categoryName = p.categoryName;
+
+          if (!categoryName && p.categoryId) {
+            const category = categoriesRes.find((c) => c.id === p.categoryId);
+            categoryName = category?.name ?? "Sin categoría";
+          }
+
+          return {
+            id: p.id,
+            name: p.name,
+            image: p.image ?? p.imageUrl ?? "",
+            category: categoryName ?? "Sin categoría",
+            categoryId: p.categoryId ?? undefined,
+            description: p.description ?? "",
+            inStock: p.inStock,
+            stockQty: p.stockQty ?? 0,
+          };
+        });
+
+        setProducts(mappedProducts);
+      } catch (error: unknown) {
+        toast({
+          title: "Error",
+          description: getErrorMessage(error) ?? "Error cargando datos",
+          variant: "destructive",
+        });
+      }
+    }
+
+    loadData();
+  }, [isAuthenticated, toast]);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      category: "Star Wars",
-      image: "",
-      inStock: true,
-    });
-    setEditingProduct(null);
+  const openCreate = () => {
+    setEditing(null);
+    setForm(EMPTY_FORM);
+    setDialogOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const openEdit = (p: AdminProduct) => {
+    setEditing(p);
+    const categoryId =
+      p.categoryId ?? categories.find((c) => c.name === p.category)?.id ?? "";
 
-    if (!formData.name.trim()) {
+    setForm({
+      name: p.name,
+      categoryId,
+      description: p.description,
+      imageFile: null,
+      imagePreview: p.image,
+      inStock: p.inStock,
+      stockQty: p.stockQty ?? 0,
+    });
+    setDialogOpen(true);
+  };
+
+  const openDelete = (p: AdminProduct) => {
+    setProductToDelete(p);
+    setDeleteDialogOpen(true);
+  };
+
+  /* ======================= TOGGLE STOCK ======================= */
+  const toggleStock = async (product: AdminProduct) => {
+    try {
+      const newInStock = !product.inStock;
+
+      // ✅ PATCH mínimo: sólo actualiza disponibilidad (sin exigir name/description)
+      await apiFetch(`/admin/products/${product.id}`, {
+        method: "PUT",
+        auth: true,
+        body: JSON.stringify({
+          inStock: newInStock,
+        }),
+      });
+
+      // Actualizar localmente (safe)
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === product.id ? { ...p, inStock: newInStock } : p
+        )
+      );
+
+      toast({
+        title: "Actualizado",
+        description: `${product.name} ahora está ${
+          newInStock ? "disponible" : "sin stock"
+        }`,
+      });
+    } catch (error: unknown) {
       toast({
         title: "Error",
-        description: "El nombre es requerido",
+        description: getErrorMessage(error) ?? "Error actualizando stock",
+        variant: "destructive",
+      });
+    }
+  };
+
+  /* ======================= DELETE ======================= */
+  const handleDelete = async () => {
+    if (!productToDelete) return;
+
+    try {
+      await apiFetch(`/admin/products/${productToDelete.id}`, {
+        method: "DELETE",
+        auth: true,
+      });
+
+      setProducts((prev) => prev.filter((p) => p.id !== productToDelete.id));
+      setDeleteDialogOpen(false);
+      setProductToDelete(null);
+
+      toast({
+        title: "Éxito",
+        description: "Producto eliminado correctamente",
+      });
+    } catch (error: unknown) {
+      toast({
+        title: "Error",
+        description: getErrorMessage(error) ?? "Error eliminando producto",
+        variant: "destructive",
+      });
+    }
+  };
+
+  /* ======================= SUBMIT ======================= */
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!form.name || !form.categoryId || !form.description) {
+      toast({
+        title: "Error",
+        description: "Nombre, categoría y descripción son obligatorios",
         variant: "destructive",
       });
       return;
     }
 
-    if (editingProduct) {
-      updateProduct(editingProduct.id, formData);
-      toast({
-        title: "Producto actualizado",
-        description: `${formData.name} fue actualizado correctamente`,
+    try {
+      let productId: string;
+
+      if (editing) {
+        const updated = await apiFetch<ProductApiDTO>(
+          `/admin/products/${editing.id}`,
+          {
+            method: "PUT",
+            auth: true,
+            body: JSON.stringify({
+              name: form.name,
+              description: form.description,
+              categoryId: form.categoryId,
+              inStock: form.inStock,
+              stockQty: form.stockQty,
+            }),
+          }
+        );
+        productId = updated.id;
+      } else {
+        const created = await apiFetch<ProductApiDTO>("/admin/products", {
+          method: "POST",
+          auth: true,
+          body: JSON.stringify({
+            name: form.name,
+            description: form.description,
+            categoryId: form.categoryId,
+            inStock: form.inStock,
+            stockQty: form.stockQty,
+          }),
+        });
+        productId = created.id;
+      }
+
+      if (form.imageFile) {
+        const fd = new FormData();
+        fd.append("image", form.imageFile);
+
+        await apiFetch(`/admin/products/${productId}/image`, {
+          method: "POST",
+          auth: true,
+          body: fd,
+        });
+      }
+
+      setDialogOpen(false);
+      setForm(EMPTY_FORM);
+
+      const res = await apiFetch<{ items: ProductApiDTO[] }>(
+        "/admin/products",
+        { auth: true }
+      );
+
+      const mappedProducts: AdminProduct[] = res.items.map((p) => {
+        let categoryName = p.categoryName;
+
+        if (!categoryName && p.categoryId) {
+          const category = categories.find((c) => c.id === p.categoryId);
+          categoryName = category?.name ?? "Sin categoría";
+        }
+
+        return {
+          id: p.id,
+          name: p.name,
+          image: p.image ?? p.imageUrl ?? "",
+          category: categoryName ?? "Sin categoría",
+          categoryId: p.categoryId ?? undefined,
+          description: p.description ?? "",
+          inStock: p.inStock,
+          stockQty: p.stockQty ?? 0,
+        };
       });
-    } else {
-      const newProduct: Product = {
-        id: Date.now().toString(),
-        ...formData,
-      };
-      addProduct(newProduct);
+
+      setProducts(mappedProducts);
+
       toast({
-        title: "Producto agregado",
-        description: `${formData.name} fue agregado al catálogo`,
+        title: "Éxito",
+        description: editing
+          ? "Producto actualizado correctamente"
+          : "Producto creado correctamente",
+      });
+    } catch (error: unknown) {
+      toast({
+        title: "Error",
+        description: getErrorMessage(error) ?? "Error guardando producto",
+        variant: "destructive",
       });
     }
-
-    setIsDialogOpen(false);
-    resetForm();
   };
 
-  const handleEdit = (product: Product) => {
-    setEditingProduct(product);
-    setFormData({
-      name: product.name,
-      category: product.category as Category,
-      image: product.image,
-      inStock: product.inStock,
-    });
-    setIsDialogOpen(true);
-  };
-
-  const handleDelete = (product: Product) => {
-    deleteProduct(product.id);
-    toast({
-      title: "Producto eliminado",
-      description: `${product.name} fue eliminado del catálogo`,
-    });
-  };
-
-  const handleLogout = () => {
-    logout();
-  };
-
+  /* ======================= UI ======================= */
   return (
-    <div className="min-h-screen bg-background bg-grid">
-      {/* Header */}
-      <header className="glass-card border-b border-primary/20 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link
-                to="/"
-                className="text-muted-foreground hover:text-primary transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Link>
-              <h1 className="font-display text-xl font-bold">
-                <span className="text-foreground">Panel </span>
-                <span className="text-gradient">Admin</span>
-              </h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      <header className="sticky top-0 z-50 bg-black/40 backdrop-blur-xl border-b border-white/10">
+        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+          <h1 className="text-2xl font-bold flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500">
+              <Package className="w-6 h-6 text-white" />
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLogout}
-              className="text-muted-foreground hover:text-destructive"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Salir
-            </Button>
-          </div>
+            <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+              Panel Admin
+            </span>
+          </h1>
+          <Button
+            variant="ghost"
+            onClick={logout}
+            className="hover:bg-white/10"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Salir
+          </Button>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        {/* Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
-        >
-          <div className="glass-card neon-border rounded-xl p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-primary/10">
-                <Package className="w-6 h-6 text-primary" />
+      <main className="container mx-auto px-6 py-10 space-y-8">
+        {/* Estadísticas */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/10 border-purple-500/20 backdrop-blur">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-purple-200">
+                Total de Productos
+              </CardTitle>
+              <Package className="w-5 h-5 text-purple-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-white">
+                {totalProducts}
               </div>
-              <div>
-                <p className="text-muted-foreground text-sm">Total Productos</p>
-                <p className="font-display text-2xl font-bold text-foreground">
-                  {products.length}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="glass-card neon-border rounded-xl p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-accent/10">
-                <Check className="w-6 h-6 text-accent" />
-              </div>
-              <div>
-                <p className="text-muted-foreground text-sm">En Stock</p>
-                <p className="font-display text-2xl font-bold text-foreground">
-                  {products.filter((p) => p.inStock).length}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="glass-card neon-border rounded-xl p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-destructive/10">
-                <X className="w-6 h-6 text-destructive" />
-              </div>
-              <div>
-                <p className="text-muted-foreground text-sm">Sin Stock</p>
-                <p className="font-display text-2xl font-bold text-foreground">
-                  {products.filter((p) => !p.inStock).length}
-                </p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
+              <p className="text-xs text-purple-300 mt-1">En tu catálogo</p>
+            </CardContent>
+          </Card>
 
-        {/* Products Table */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="glass-card neon-border rounded-xl overflow-hidden"
-        >
-          <div className="p-6 border-b border-border flex items-center justify-between">
-            <h2 className="font-display text-lg font-semibold">Productos</h2>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button
-                  onClick={resetForm}
-                  className="bg-primary text-primary-foreground hover:bg-primary/90"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Agregar
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="glass-card border-primary/30">
-                <DialogHeader>
-                  <DialogTitle className="font-display">
-                    {editingProduct ? "Editar Producto" : "Nuevo Producto"}
-                  </DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-1 block">
-                      Nombre
-                    </label>
-                    <Input
-                      value={formData.name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, name: e.target.value })
-                      }
-                      className="bg-muted/50 border-border"
-                      placeholder="Millennium Falcon"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-1 block">
-                      Categoría
-                    </label>
-                    <Select
-                      value={formData.category}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, category: value as Category })
-                      }
-                    >
-                      <SelectTrigger className="bg-muted/50 border-border">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat} value={cat}>
-                            {cat}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-1 block">
-                      URL de Imagen
-                    </label>
-                    <Input
-                      value={formData.image}
-                      onChange={(e) =>
-                        setFormData({ ...formData, image: e.target.value })
-                      }
-                      className="bg-muted/50 border-border"
-                      placeholder="https://..."
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm text-muted-foreground">
-                      Disponible
-                    </label>
-                    <Switch
-                      checked={formData.inStock}
-                      onCheckedChange={(checked) =>
-                        setFormData({ ...formData, inStock: checked })
-                      }
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full bg-primary text-primary-foreground"
-                  >
-                    {editingProduct ? "Guardar Cambios" : "Agregar Producto"}
-                  </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </div>
+          <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/10 border-emerald-500/20 backdrop-blur">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-emerald-200">
+                En Stock
+              </CardTitle>
+              <CheckCircle className="w-5 h-5 text-emerald-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-white">
+                {inStockProducts}
+              </div>
+              <p className="text-xs text-emerald-300 mt-1">
+                Disponibles para venta
+              </p>
+            </CardContent>
+          </Card>
 
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-border hover:bg-transparent">
-                  <TableHead className="text-muted-foreground">Imagen</TableHead>
-                  <TableHead className="text-muted-foreground">Nombre</TableHead>
-                  <TableHead className="text-muted-foreground">Categoría</TableHead>
-                  <TableHead className="text-muted-foreground">Stock</TableHead>
-                  <TableHead className="text-muted-foreground text-right">
-                    Acciones
-                  </TableHead>
+          <Card className="bg-gradient-to-br from-rose-500/10 to-rose-600/10 border-rose-500/20 backdrop-blur">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-rose-200">
+                Sin Stock
+              </CardTitle>
+              <AlertCircle className="w-5 h-5 text-rose-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-white">
+                {outOfStockProducts}
+              </div>
+              <p className="text-xs text-rose-300 mt-1">Requieren atención</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold text-white">
+              Gestión de Productos
+            </h2>
+            <p className="text-sm text-gray-400 mt-1">
+              Administra tu inventario completo
+            </p>
+          </div>
+          <Button
+            onClick={openCreate}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg shadow-purple-500/50"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nuevo producto
+          </Button>
+        </div>
+
+        <div className="rounded-xl border border-white/10 bg-black/20 backdrop-blur overflow-hidden shadow-2xl">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-white/10 hover:bg-white/5">
+                <TableHead className="text-gray-300">Imagen</TableHead>
+                <TableHead className="text-gray-300">Nombre</TableHead>
+                <TableHead className="text-gray-300">Categoría</TableHead>
+                <TableHead className="text-gray-300">Descripción</TableHead>
+                <TableHead className="text-gray-300">Stock</TableHead>
+                <TableHead className="text-gray-300">Disponible</TableHead>
+                <TableHead className="text-right text-gray-300">
+                  Acciones
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {products.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-16">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="p-4 rounded-full bg-white/5">
+                        <Package className="w-12 h-12 text-white/20" />
+                      </div>
+                      <div>
+                        <p className="text-lg font-medium text-white/60">
+                          No hay productos aún
+                        </p>
+                        <p className="text-sm text-white/40 mt-1">
+                          Comienza agregando tu primer producto
+                        </p>
+                      </div>
+                    </div>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {products.map((product) => (
-                  <TableRow key={product.id} className="border-border">
+              ) : (
+                products.map((product) => (
+                  <TableRow
+                    key={product.id}
+                    className="border-white/5 hover:bg-white/5 transition-colors"
+                  >
                     <TableCell>
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-12 h-12 rounded-lg object-cover"
-                      />
+                      {product.image ? (
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-14 h-14 object-cover rounded-lg ring-2 ring-white/10"
+                        />
+                      ) : (
+                        <div className="w-14 h-14 bg-gradient-to-br from-white/5 to-white/10 rounded-lg flex items-center justify-center ring-2 ring-white/10">
+                          <Package className="w-7 h-7 text-white/30" />
+                        </div>
+                      )}
                     </TableCell>
-                    <TableCell className="font-medium text-foreground">
+                    <TableCell className="font-medium text-white">
                       {product.name}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {product.category}
-                    </TableCell>
                     <TableCell>
-                      <span
-                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                          product.inStock
-                            ? "bg-accent/20 text-accent"
-                            : "bg-destructive/20 text-destructive"
-                        }`}
-                      >
-                        {product.inStock ? "Disponible" : "Sin stock"}
+                      <span className="px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-medium border border-purple-500/30">
+                        {product.category}
                       </span>
                     </TableCell>
+                    <TableCell className="max-w-xs truncate text-gray-300">
+                      {product.description}
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm text-gray-300">
+                        {product.stockQty && product.stockQty > 0
+                          ? `${product.stockQty} unidades`
+                          : "—"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Switch
+                          checked={product.inStock}
+                          onCheckedChange={() => toggleStock(product)}
+                          className="data-[state=checked]:bg-emerald-500"
+                        />
+                        <span
+                          className={`text-xs font-medium ${
+                            product.inStock ? "text-emerald-400" : "text-rose-400"
+                          }`}
+                        >
+                          {product.inStock ? "Disponible" : "Sin stock"}
+                        </span>
+                      </div>
+                    </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex justify-end gap-2">
                         <Button
                           variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(product)}
-                          className="hover:bg-primary/10 hover:text-primary"
+                          size="sm"
+                          onClick={() => openEdit(product)}
+                          className="hover:bg-purple-500/20 hover:text-purple-300"
                         >
                           <Pencil className="w-4 h-4" />
                         </Button>
                         <Button
                           variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(product)}
-                          className="hover:bg-destructive/10 hover:text-destructive"
+                          size="sm"
+                          onClick={() => openDelete(product)}
+                          className="hover:bg-rose-500/20 hover:text-rose-300"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </motion.div>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </main>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-slate-900 border-white/10">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+              {editing ? "Editar producto" : "Nuevo producto"}
+            </DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">
+                Nombre
+              </label>
+              <Input
+                placeholder="Ej: Pizza Margherita"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">
+                Descripción
+              </label>
+              <Textarea
+                placeholder="Describe el producto..."
+                value={form.description}
+                rows={4}
+                onChange={(e) =>
+                  setForm({ ...form, description: e.target.value })
+                }
+                className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">
+                Categoría
+              </label>
+              <Select
+                value={form.categoryId}
+                onValueChange={(value) =>
+                  setForm({ ...form, categoryId: value })
+                }
+              >
+                <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                  <SelectValue placeholder="Seleccionar categoría" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-900 border-white/10">
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id} className="text-white">
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">
+                Imagen
+              </label>
+              <ImageDropzone
+                preview={form.imagePreview}
+                onImageSelect={(file) => setForm({ ...form, imageFile: file })}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">
+                  Disponibilidad
+                </label>
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10">
+                  <Switch
+                    checked={form.inStock}
+                    onCheckedChange={(checked) =>
+                      setForm({ ...form, inStock: checked })
+                    }
+                    className="data-[state=checked]:bg-emerald-500"
+                  />
+                  <span className="text-sm text-white">
+                    {form.inStock ? "Disponible" : "Sin stock"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">
+                  Cantidad (opcional)
+                </label>
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  value={form.stockQty || ""}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      stockQty: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end pt-4">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setDialogOpen(false)}
+                className="hover:bg-white/10"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+              >
+                {editing ? "Guardar cambios" : "Crear producto"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent className="bg-slate-900 border-white/10">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white">
+              ¿Estás seguro?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-400">
+              Esta acción no se puede deshacer. Se eliminará permanentemente el
+              producto "{productToDelete?.name}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-white/5 hover:bg-white/10 border-white/10 text-white">
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-rose-500 hover:bg-rose-600 text-white"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

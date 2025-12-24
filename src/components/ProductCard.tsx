@@ -1,97 +1,158 @@
-import { motion } from "framer-motion";
-import { Plus, Check, Package, PackageX } from "lucide-react";
-import { Product } from "@/types/product";
-import { useCart } from "@/context/CartContext";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import * as React from "react"
+import { motion } from "framer-motion"
+import {
+  Plus,
+  Check,
+  Package,
+  PackageX,
+  CheckCircle2,
+} from "lucide-react"
+import { Product } from "@/types/product"
+import { useCart } from "@/context/CartContext"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { useToast } from "@/hooks/use-toast"
 
 interface ProductCardProps {
-  product: Product;
-  index: number;
+  product: Product
+  index: number
+  onOpenDetail?: (product: Product) => void
 }
 
-const ProductCard = ({ product, index }: ProductCardProps) => {
-  const { addToCart, isInCart } = useCart();
-  const inCart = isInCart(product.id);
+const ProductCard = React.forwardRef<HTMLElement, ProductCardProps>(
+  ({ product, index, onOpenDetail }, ref) => {
+    const { addToCart, isInCart } = useCart()
+    const { toast } = useToast()
+    const inCart = isInCart(product.id)
 
-  return (
-    <motion.article
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05, duration: 0.4 }}
-      whileHover={{ y: -8, transition: { duration: 0.2 } }}
-      className="group relative glass-card rounded-xl overflow-hidden hover-glow"
-    >
-      {/* Image container */}
-      <div className="relative aspect-square overflow-hidden">
-        <motion.img
-          src={product.image}
-          alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          loading="lazy"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
-        
-        {/* Stock badge */}
-        <Badge
-          className={`absolute top-3 right-3 ${
-            product.inStock
-              ? "bg-neon-green/20 text-neon-green border-neon-green/50"
-              : "bg-neon-red/20 text-neon-red border-neon-red/50"
-          }`}
-        >
-          {product.inStock ? (
-            <>
-              <Package className="w-3 h-3 mr-1" />
-              Disponible
-            </>
-          ) : (
-            <>
-              <PackageX className="w-3 h-3 mr-1" />
-              No disponible
-            </>
+    const handleAdd = (e: React.MouseEvent) => {
+      e.stopPropagation()
+      if (inCart || !product.inStock) return
+
+      addToCart(product)
+
+      toast({
+        duration: 2000,
+        className:
+          "toast-neon border border-emerald-500/40 bg-black/85 backdrop-blur-md",
+        description: (
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="w-7 h-7 text-emerald-400" />
+            <div>
+              <p className="font-semibold text-emerald-300">
+                Agregado a la consulta
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {product.name}
+              </p>
+            </div>
+          </div>
+        ),
+      })
+    }
+
+    return (
+      <motion.article
+        ref={ref}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.05, duration: 0.35 }}
+        whileHover={{ y: -6 }}
+        onClick={() => onOpenDetail?.(product)}
+        className="group relative glass-card rounded-xl overflow-hidden hover-glow cursor-pointer"
+      >
+        {/* IMAGE */}
+        <div className="relative aspect-square overflow-hidden">
+          <motion.img
+            src={product.image}
+            alt={product.name}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/20 to-transparent" />
+        </div>
+
+        {/* CONTENT */}
+        <div className="p-4 flex flex-col gap-3">
+          {/* TITLE + STOCK */}
+          <div className="flex items-start justify-between gap-3">
+            <h3 className="font-semibold text-base leading-snug line-clamp-2">
+              {product.name}
+            </h3>
+
+            <Badge
+              variant="outline"
+              className={`shrink-0 text-xs ${
+                product.inStock
+                  ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                  : "bg-red-500/20 text-red-400 border-red-500/30"
+              }`}
+            >
+              {product.inStock ? (
+                <>
+                  <Package className="w-3 h-3 mr-1" />
+                  Disponible
+                </>
+              ) : (
+                <>
+                  <PackageX className="w-3 h-3 mr-1" />
+                  No disponible
+                </>
+              )}
+            </Badge>
+          </div>
+
+          {/* CATEGORY */}
+          <Badge
+            variant="outline"
+            className="w-fit bg-secondary/20 text-secondary border-secondary/50"
+          >
+            {product.category}
+          </Badge>
+
+          {/* DESCRIPTION */}
+          {product.description && (
+            <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+              {product.description}
+            </p>
           )}
-        </Badge>
 
-        {/* Category badge */}
-        <Badge
-          variant="outline"
-          className="absolute top-3 left-3 bg-secondary/20 text-secondary border-secondary/50"
-        >
-          {product.category}
-        </Badge>
-      </div>
+          {/* ACTION */}
+          <motion.div
+            animate={inCart ? { scale: [1, 1.05, 1] } : { scale: 1 }}
+            transition={{ duration: 0.25 }}
+            className="pt-2"
+          >
+            <Button
+              onClick={handleAdd}
+              disabled={!product.inStock}
+              variant={inCart ? "outline" : "default"}
+              className={`w-full transition-all duration-300 ${
+                inCart
+                  ? "bg-primary/20 text-primary border-primary/50"
+                  : product.inStock
+                  ? "bg-primary hover:bg-primary/90 text-primary-foreground neon-glow"
+                  : "bg-muted/50 text-muted-foreground cursor-not-allowed"
+              }`}
+            >
+              {inCart ? (
+                <>
+                  <Check className="w-4 h-4 mr-2" />
+                  En consulta
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Agregar a consulta
+                </>
+              )}
+            </Button>
+          </motion.div>
+        </div>
+      </motion.article>
+    )
+  }
+)
 
-      {/* Content */}
-      <div className="p-4 space-y-4">
-        <h3 className="font-display font-semibold text-lg text-foreground line-clamp-2 min-h-[3.5rem]">
-          {product.name}
-        </h3>
-
-        <Button
-          onClick={() => addToCart(product)}
-          disabled={inCart}
-          className={`w-full font-semibold transition-all duration-300 ${
-            inCart
-              ? "bg-neon-green/20 text-neon-green border border-neon-green/50 hover:bg-neon-green/30"
-              : "bg-primary text-primary-foreground hover:bg-primary/80 neon-glow"
-          }`}
-        >
-          {inCart ? (
-            <>
-              <Check className="w-4 h-4 mr-2" />
-              En consulta
-            </>
-          ) : (
-            <>
-              <Plus className="w-4 h-4 mr-2" />
-              Agregar a consulta
-            </>
-          )}
-        </Button>
-      </div>
-    </motion.article>
-  );
-};
-
-export default ProductCard;
+ProductCard.displayName = "ProductCard"
+export default ProductCard

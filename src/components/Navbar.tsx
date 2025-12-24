@@ -17,6 +17,7 @@ const Navbar = ({ onCartClick }: NavbarProps) => {
   const links = [
     { href: "/", label: "Inicio" },
     { href: "/catalogo", label: "Catálogo" },
+    { href: "/nosotros", label: "Nosotros" }, 
   ];
 
   return (
@@ -34,7 +35,10 @@ const Navbar = ({ onCartClick }: NavbarProps) => {
               whileHover={{ scale: 1.02 }}
             >
               <h1 className="font-display text-xl md:text-2xl font-bold neon-text">
-                Mike<span className="text-secondary neon-text-magenta">&Co</span>
+                Mike
+                <span className="text-secondary neon-text-magenta">
+                  &Co
+                </span>
               </h1>
             </motion.div>
           </Link>
@@ -54,12 +58,6 @@ const Navbar = ({ onCartClick }: NavbarProps) => {
                 {link.label}
               </Link>
             ))}
-            <Link
-              to="/login"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Admin
-            </Link>
           </div>
 
           {/* Actions */}
@@ -121,13 +119,6 @@ const Navbar = ({ onCartClick }: NavbarProps) => {
                   {link.label}
                 </Link>
               ))}
-              <Link
-                to="/login"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="py-2 text-sm font-medium text-muted-foreground"
-              >
-                Admin
-              </Link>
             </div>
           </motion.div>
         )}

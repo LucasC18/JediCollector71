@@ -1,41 +1,57 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Lock, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "react-router-dom";
 
 const Login = () => {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  /* ================================
+     🔐 Redirección post-login
+  ================================ */
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/admin", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+
+  /* ================================
+     📩 Submit login
+  ================================ */
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    setTimeout(() => {
-      const success = login(password);
-      if (success) {
-        toast({
-          title: "Bienvenido",
-          description: "Acceso concedido al panel de administración",
-        });
-        navigate("/admin");
-      } else {
-        toast({
-          title: "Error",
-          description: "Contraseña incorrecta",
-          variant: "destructive",
-        });
-      }
+    const success = await login(email, password);
+
+    if (!success) {
+      toast({
+        title: "Error de acceso",
+        description: "Email o contraseña incorrectos",
+        variant: "destructive",
+      });
       setIsLoading(false);
-    }, 500);
+      return;
+    }
+
+    toast({
+      title: "Bienvenido",
+      description: "Acceso concedido al panel de administración",
+    });
+
+    // ❗ NO navegamos acá
+    // La redirección la maneja el useEffect cuando cambia isAuthenticated
+    setIsLoading(false);
   };
 
   return (
@@ -58,30 +74,38 @@ const Login = () => {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
               <Lock className="w-8 h-8 text-primary" />
             </div>
+
             <h1 className="font-display text-2xl font-bold mb-2">
               <span className="text-foreground">Panel </span>
               <span className="text-gradient">Admin</span>
             </h1>
+
             <p className="text-muted-foreground text-sm">
-              Ingresá la contraseña para acceder
+              Acceso exclusivo para administración
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <Input
-                type="password"
-                placeholder="Contraseña"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="bg-muted/50 border-border focus:border-primary h-12"
-                autoFocus
-              />
-            </div>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <Input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="bg-muted/50 border-border focus:border-primary h-12"
+              autoFocus
+            />
+
+            <Input
+              type="password"
+              placeholder="Contraseña"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="bg-muted/50 border-border focus:border-primary h-12"
+            />
 
             <Button
               type="submit"
-              disabled={isLoading || !password}
+              disabled={isLoading || !email || !password}
               className="w-full h-12 bg-primary text-primary-foreground font-display font-semibold neon-glow hover:bg-primary/90"
             >
               {isLoading ? "Verificando..." : "Ingresar"}

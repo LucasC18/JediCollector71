@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import SearchBar from "@/components/SearchBar";
@@ -6,16 +6,34 @@ import Filters from "@/components/Filters";
 import ProductGrid from "@/components/ProductGrid";
 import CartDrawer from "@/components/CartDrawer";
 import { useProducts } from "@/context/ProductContext";
-import { Category } from "@/types/product";
+import { Product } from "@/types/product";
 
 const Catalog = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState<Category[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [showOnlyInStock, setShowOnlyInStock] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const { products } = useProducts();
 
-  const handleCategoryToggle = (category: Category) => {
+  /* =======================
+     Products from context
+     ======================= */
+  const { products, isLoading } = useProducts();
+
+  /* =======================
+     Categories (dynamic)
+     ======================= */
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    products.forEach((p) => {
+      if (p.category) set.add(p.category);
+    });
+    return Array.from(set);
+  }, [products]);
+
+  /* =======================
+     Category toggle
+     ======================= */
+  const handleCategoryToggle = (category: string) => {
     setSelectedCategories((prev) =>
       prev.includes(category)
         ? prev.filter((c) => c !== category)
@@ -23,17 +41,22 @@ const Catalog = () => {
     );
   };
 
+  /* =======================
+     Filtered products
+     ======================= */
   const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      const matchesSearch = product.name
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
+    const query = searchQuery.trim().toLowerCase();
 
+    return products.filter((product: Product) => {
+      const name = product.name.toLowerCase();
+      const category = product.category;
+      const inStock = product.inStock;
+
+      const matchesSearch = query === "" || name.includes(query);
       const matchesCategory =
         selectedCategories.length === 0 ||
-        selectedCategories.includes(product.category as Category);
-
-      const matchesStock = !showOnlyInStock || product.inStock;
+        selectedCategories.includes(category);
+      const matchesStock = !showOnlyInStock || inStock;
 
       return matchesSearch && matchesCategory && matchesStock;
     });
@@ -55,7 +78,8 @@ const Catalog = () => {
             <span className="text-gradient">Completo</span>
           </h1>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            Explorá toda nuestra colección de sets LEGO. Usá los filtros para encontrar exactamente lo que buscás.
+            Explorá toda nuestra colección de sets LEGO. Usá los filtros para
+            encontrar exactamente lo que buscás.
           </p>
         </motion.div>
 
@@ -70,6 +94,7 @@ const Catalog = () => {
             onCategoryToggle={handleCategoryToggle}
             showOnlyInStock={showOnlyInStock}
             onStockFilterChange={setShowOnlyInStock}
+            categories={categories}
           />
         </div>
 
@@ -80,18 +105,33 @@ const Catalog = () => {
           className="mb-6"
         >
           <p className="text-muted-foreground text-sm">
-            Mostrando{" "}
-            <span className="text-primary font-semibold">
-              {filteredProducts.length}
-            </span>{" "}
-            de{" "}
-            <span className="text-primary font-semibold">{products.length}</span>{" "}
-            productos
+            {isLoading ? (
+              "Cargando productos..."
+            ) : (
+              <>
+                Mostrando{" "}
+                <span className="text-primary font-semibold">
+                  {filteredProducts.length}
+                </span>{" "}
+                de{" "}
+                <span className="text-primary font-semibold">
+                  {products.length}
+                </span>{" "}
+                productos
+              </>
+            )}
           </p>
         </motion.div>
 
         {/* Product Grid */}
-        <ProductGrid products={filteredProducts} />
+        <ProductGrid
+          products={filteredProducts}
+          onClearFilters={() => {
+            setSearchQuery("");
+            setSelectedCategories([]);
+            setShowOnlyInStock(false);
+          }}
+        />
       </main>
 
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />

@@ -2,22 +2,24 @@ import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { categories } from "@/data/products";
-import { Category } from "@/types/product";
 
 interface FiltersProps {
-  selectedCategories: Category[];
-  onCategoryToggle: (category: Category) => void;
+  categories: string[];
+  selectedCategories: string[];
+  onCategoryToggle: (category: string) => void;
   showOnlyInStock: boolean;
   onStockFilterChange: (value: boolean) => void;
 }
 
 const Filters = ({
+  categories,
   selectedCategories,
   onCategoryToggle,
   showOnlyInStock,
   onStockFilterChange,
 }: FiltersProps) => {
+  const allSelected = selectedCategories.length === 0;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -25,14 +27,35 @@ const Filters = ({
       transition={{ delay: 0.2 }}
       className="space-y-6"
     >
-      {/* Category filters */}
+      {/* Categorías */}
       <div className="space-y-3">
         <h3 className="font-display text-sm font-semibold text-primary uppercase tracking-wider">
           Categorías
         </h3>
+
         <div className="flex flex-wrap gap-2">
+          {/* Todas */}
+          <Badge
+            role="button"
+            aria-pressed={allSelected}
+            tabIndex={0}
+            onClick={() => {
+              if (!allSelected) {
+                selectedCategories.forEach(onCategoryToggle);
+              }
+            }}
+            className={`cursor-pointer transition-all duration-300 px-4 py-2 text-sm font-medium ${
+              allSelected
+                ? "bg-primary text-primary-foreground neon-glow"
+                : "bg-card/50 border-primary/30 text-foreground hover:border-primary hover:bg-primary/10"
+            }`}
+          >
+            Todas
+          </Badge>
+
           {categories.map((category, index) => {
             const isSelected = selectedCategories.includes(category);
+
             return (
               <motion.div
                 key={category}
@@ -41,13 +64,15 @@ const Filters = ({
                 transition={{ delay: 0.1 + index * 0.05 }}
               >
                 <Badge
-                  variant={isSelected ? "default" : "outline"}
+                  role="button"
+                  aria-pressed={isSelected}
+                  tabIndex={0}
+                  onClick={() => onCategoryToggle(category)}
                   className={`cursor-pointer transition-all duration-300 px-4 py-2 text-sm font-medium ${
                     isSelected
                       ? "bg-primary text-primary-foreground neon-glow"
                       : "bg-card/50 border-primary/30 text-foreground hover:border-primary hover:bg-primary/10"
                   }`}
-                  onClick={() => onCategoryToggle(category)}
                 >
                   {category}
                 </Badge>
@@ -57,7 +82,7 @@ const Filters = ({
         </div>
       </div>
 
-      {/* Stock filter */}
+      {/* Stock */}
       <div className="flex items-center gap-3 p-4 glass-card rounded-lg">
         <Switch
           id="stock-filter"

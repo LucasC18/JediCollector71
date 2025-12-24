@@ -1,6 +1,17 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  ReactNode,
+  useMemo,
+} from "react";
 import { Product, CartItem } from "@/types/product";
 
+/* =======================
+   Types
+   ======================= */
 interface CartContextType {
   items: CartItem[];
   addToCart: (product: Product) => void;
@@ -12,16 +23,50 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const STORAGE_KEY = "lego-consult-cart";
+
+/* =======================
+   Provider
+   ======================= */
+export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>([]);
 
-  const addToCart = useCallback((product: Product) => {
-    setItems((prev) => {
-      const existingItem = prev.find((item) => item.id === product.id);
-      if (existingItem) {
-        return prev;
+  /* Load from storage */
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return;
+
+    try {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        setItems(parsed);
+      } else {
+        setItems([]);
       }
-      return [...prev, { ...product, quantity: 1 }];
+    } catch (e) {
+      setItems([]);
+    }
+  }, []);
+
+  /* Persist */
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  }, [items]);
+
+  /* Actions */
+  const addToCart = useCallback((product: Product) => {
+    if (!product.inStock) return;
+
+    setItems((prev) => {
+      const exists = prev.some((item) => item.id === product.id);
+      if (exists) return prev;
+
+      const newItem: CartItem = {
+        ...product,
+        quantity: 1,
+      };
+
+      return [...prev, newItem];
     });
   }, []);
 
@@ -38,17 +83,27 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     [items]
   );
 
-  const itemCount = items.length;
+  const itemCount = useMemo(() => items.length, [items]);
 
   return (
     <CartContext.Provider
-      value={{ items, addToCart, removeFromCart, clearCart, isInCart, itemCount }}
+      value={{
+        items,
+        addToCart,
+        removeFromCart,
+        clearCart,
+        isInCart,
+        itemCount,
+      }}
     >
       {children}
     </CartContext.Provider>
   );
 };
 
+/* =======================
+   Hook
+   ======================= */
 export const useCart = () => {
   const context = useContext(CartContext);
   if (!context) {

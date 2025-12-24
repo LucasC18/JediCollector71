@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -7,21 +7,36 @@ import CartDrawer from "@/components/CartDrawer";
 import { useProducts } from "@/context/ProductContext";
 import { Sparkles, ChevronDown, ArrowRight } from "lucide-react";
 import heroImage from "@/assets/hero-starwars.jpg";
+import { Product } from "@/types/product";
 
 const Home = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const { getFeaturedProducts } = useProducts();
-  const featuredProducts = getFeaturedProducts();
+
+  /* =======================
+     Products
+     ======================= */
+  const { products, isLoading } = useProducts();
+
+  /* =======================
+     Featured products
+     ======================= */
+  const featuredProducts = useMemo<Product[]>(() => {
+    return products
+      .filter((p) => p.inStock)
+      .slice(0, 4);
+  }, [products]);
 
   const scrollToProducts = () => {
-    document.getElementById("destacados")?.scrollIntoView({ behavior: "smooth" });
+    document
+      .getElementById("destacados")
+      ?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar onCartClick={() => setIsCartOpen(true)} />
 
-      {/* Epic Hero Section */}
+      {/* Hero */}
       <section className="relative h-screen overflow-hidden">
         <motion.div
           initial={{ scale: 1.1 }}
@@ -52,14 +67,12 @@ const Home = () => {
             </div>
 
             <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-bold mb-6">
-              <span className="text-foreground drop-shadow-[0_0_30px_rgba(0,255,255,0.5)]">
-                Mike
-              </span>
+              <span className="text-foreground">Mike</span>
               <span className="text-gradient">&Co</span>
             </h1>
 
             <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto mb-10">
-              Explorá nuestra colección de sets de LEGO. Agregá los que te
+              Explorá nuestra colección de sets LEGO. Agregá los que te
               interesen y consultá directamente por WhatsApp.
             </p>
 
@@ -92,7 +105,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Featured Products Section */}
+      {/* Featured */}
       <main id="destacados" className="container mx-auto px-4 py-20 bg-grid">
         <div className="text-center mb-12">
           <motion.h2
@@ -109,7 +122,13 @@ const Home = () => {
           </p>
         </div>
 
-        <ProductGrid products={featuredProducts} />
+        {isLoading ? (
+          <p className="text-center text-muted-foreground">
+            Cargando productos...
+          </p>
+        ) : (
+          <ProductGrid products={featuredProducts} />
+        )}
 
         <motion.div
           initial={{ opacity: 0 }}
