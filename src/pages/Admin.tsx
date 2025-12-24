@@ -147,7 +147,7 @@ const Admin = () => {
         setCategories(categoriesRes);
 
         const productsRes = await apiFetch<{ items: ProductApiDTO[] }>(
-          "/admin/products",
+          "/api/v1/admin/products",
           { auth: true }
         );
 
@@ -222,7 +222,7 @@ const Admin = () => {
       const newInStock = !product.inStock;
 
       // ✅ PATCH mínimo: sólo actualiza disponibilidad (sin exigir name/description)
-      await apiFetch(`/admin/products/${product.id}`, {
+      await apiFetch(`/api/v1/admin/products/${product.id}`, {
         method: "PUT",
         auth: true,
         body: JSON.stringify({
@@ -257,7 +257,7 @@ const Admin = () => {
     if (!productToDelete) return;
 
     try {
-      await apiFetch(`/admin/products/${productToDelete.id}`, {
+      await apiFetch(`/api/v1/admin/products/${productToDelete.id}`, {
         method: "DELETE",
         auth: true,
       });
@@ -297,7 +297,7 @@ const Admin = () => {
 
       if (editing) {
         const updated = await apiFetch<ProductApiDTO>(
-          `/admin/products/${editing.id}`,
+          `/api/v1/admin/products/${editing.id}`,
           {
             method: "PUT",
             auth: true,
@@ -312,7 +312,7 @@ const Admin = () => {
         );
         productId = updated.id;
       } else {
-        const created = await apiFetch<ProductApiDTO>("/admin/products", {
+        const created = await apiFetch<ProductApiDTO>("/api/v1/admin/products", {
           method: "POST",
           auth: true,
           body: JSON.stringify({
@@ -330,7 +330,7 @@ const Admin = () => {
         const fd = new FormData();
         fd.append("image", form.imageFile);
 
-        await apiFetch(`/admin/products/${productId}/image`, {
+        await apiFetch(`/api/v1/admin/products/${productId}/image`, {
           method: "POST",
           auth: true,
           body: fd,
@@ -341,7 +341,7 @@ const Admin = () => {
       setForm(EMPTY_FORM);
 
       const res = await apiFetch<{ items: ProductApiDTO[] }>(
-        "/admin/products",
+        "/api/v1/admin/products",
         { auth: true }
       );
 
