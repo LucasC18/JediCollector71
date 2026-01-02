@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
-import { Instagram, MessageCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Mail, MapPin, Phone } from "lucide-react";
 
 /* ================================
    📞 WhatsApp desde .env
@@ -8,99 +7,125 @@ import { Link } from "react-router-dom";
 const WHATSAPP_PHONE = import.meta.env.VITE_WHATSAPP_PHONE as string | undefined;
 
 const Footer = () => {
+  const currentYear = new Date().getFullYear();
+
+  const navigationLinks = [
+    { name: "Inicio", path: "/" },
+    { name: "Catálogo", path: "/catalogo" },
+    { name: "Sobre Nosotros", path: "/nosotros" }
+  ];
+
   return (
-    <footer className="relative mt-20">
-      {/* Neon divider */}
-      <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+    <footer className="relative mt-24">
+      {/* Decorative divider with glow effect */}
+      <div className="absolute top-0 left-0 right-0 h-px">
+        <div className="h-full bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+        <div className="absolute inset-0 blur-sm bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+      </div>
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.4 }}
-        className="glass-card border-t border-primary/20"
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="glass-card border-t border-primary/10"
       >
-        <div className="container mx-auto px-4 py-12 grid grid-cols-1 md:grid-cols-3 gap-10">
-          {/* Brand */}
-          <div className="space-y-4">
-            <h3 className="font-display text-xl font-bold">
-              Mike<span className="text-gradient">Co</span>
-            </h3>
-            <p className="text-sm text-muted-foreground max-w-sm">
-              Tienda de exhibición LEGO. Explorá sets únicos y consultá
-              disponibilidad directamente por WhatsApp.
-            </p>
-          </div>
-
-          {/* Navigation */}
-          <div className="space-y-4">
-            <h4 className="text-sm font-semibold uppercase tracking-wider text-primary">
-              Navegación
-            </h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link
-                  to="/"
-                  className="text-muted-foreground hover:text-primary transition-colors"
-                >
-                  Inicio
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/catalogo"
-                  className="text-muted-foreground hover:text-primary transition-colors"
-                >
-                  Catálogo
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/nosotros"
-                  className="text-muted-foreground hover:text-primary transition-colors"
-                >
-                  Sobre Nosotros
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Contact */}
-          <div className="space-y-4">
-            <h4 className="text-sm font-semibold uppercase tracking-wider text-primary">
-              Contacto
-            </h4>
-
-            <div className="flex items-center gap-4 pt-2">
-              {WHATSAPP_PHONE && (
-                <a
-                  href={`https://wa.me/${WHATSAPP_PHONE}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-primary transition-colors"
-                  aria-label="WhatsApp"
-                >
-                  <MessageCircle className="w-5 h-5" />
-                </a>
-              )}
-
-              <a
-                href="https://instagram.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-primary transition-colors"
-                aria-label="Instagram"
-              >
-                <Instagram className="w-5 h-5" />
+        <div className="container mx-auto px-6 lg:px-8 py-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 lg:gap-16">
+            
+            {/* Brand Section */}
+            <div className="space-y-5">
+              <a href="/" className="inline-block group">
+                <h3 className="font-display text-2xl font-bold transition-all">
+                  Mike<span className="text-gradient group-hover:opacity-80 transition-opacity">Co</span>
+                </h3>
               </a>
+              <p className="text-sm leading-relaxed text-muted-foreground max-w-sm">
+                Tienda de exhibición especializada en sets LEGO únicos y exclusivos. 
+                Explorá nuestra colección y consultá disponibilidad directamente.
+              </p>
+            </div>
+
+            {/* Navigation Section */}
+            <div className="space-y-5">
+              <h4 className="text-sm font-semibold uppercase tracking-wider text-foreground">
+                Navegación
+              </h4>
+              <nav>
+                <ul className="space-y-3">
+                  {navigationLinks.map((link) => (
+                    <li key={link.path}>
+                      <a
+                        href={link.path}
+                        className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200 inline-flex items-center group"
+                      >
+                        <span className="relative">
+                          {link.name}
+                          <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-primary transition-all duration-200 group-hover:w-full" />
+                        </span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </div>
+
+            {/* Contact Section */}
+            <div className="space-y-5">
+              <h4 className="text-sm font-semibold uppercase tracking-wider text-foreground">
+                Contacto
+              </h4>
+              
+              <div className="space-y-3.5">
+                <div className="flex items-start gap-3 text-sm text-muted-foreground">
+                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary/70" />
+                  <span className="leading-relaxed">
+                    Buenos Aires<br />
+                    Argentina
+                  </span>
+                </div>
+
+                {WHATSAPP_PHONE && (
+                  <a 
+                    href={`https://wa.me/${WHATSAPP_PHONE}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-start gap-3 text-sm text-muted-foreground hover:text-primary transition-colors duration-200 group"
+                  >
+                    <Phone className="w-4 h-4 mt-0.5 flex-shrink-0 group-hover:text-primary transition-colors" />
+                    <span className="relative">
+                      WhatsApp
+                      <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-primary transition-all duration-200 group-hover:w-full" />
+                    </span>
+                  </a>
+                )}
+
+                <a 
+                  href="mailto:info@mikeco.com" 
+                  className="flex items-start gap-3 text-sm text-muted-foreground hover:text-primary transition-colors duration-200 group"
+                >
+                  <Mail className="w-4 h-4 mt-0.5 flex-shrink-0 group-hover:text-primary transition-colors" />
+                  <span className="relative">
+                    info@mikeco.com
+                    <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-primary transition-all duration-200 group-hover:w-full" />
+                  </span>
+                </a>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Bottom bar */}
-        <div className="border-t border-primary/10">
-          <div className="container mx-auto px-4 py-4 text-center text-xs text-muted-foreground">
-            © {new Date().getFullYear()} MikeCo — Exhibición LEGO
+        {/* Bottom Bar */}
+        <div className="border-t border-primary/10 bg-background/30">
+          <div className="container mx-auto px-6 lg:px-8 py-6">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-muted-foreground">
+              <p className="text-center sm:text-left">
+                © {currentYear} MikeCo. Todos los derechos reservados.
+              </p>
+              <p className="text-center sm:text-right">
+                Tienda de exhibición LEGO
+              </p>
+            </div>
           </div>
         </div>
       </motion.div>

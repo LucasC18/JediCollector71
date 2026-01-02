@@ -26,6 +26,27 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 const STORAGE_KEY = "lego-consult-cart";
 
 /* =======================
+   Storage Helper (Safari-safe)
+   ======================= */
+const safeStorage = {
+  getItem: (key: string): string | null => {
+    try {
+      return localStorage.getItem(key);
+    } catch (e) {
+      console.warn("localStorage no disponible:", e);
+      return null;
+    }
+  },
+  setItem: (key: string, value: string): void => {
+    try {
+      localStorage.setItem(key, value);
+    } catch (e) {
+      console.warn("No se pudo guardar en localStorage:", e);
+    }
+  },
+};
+
+/* =======================
    Provider
    ======================= */
 export const CartProvider = ({ children }: { children: ReactNode }) => {
@@ -33,7 +54,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   /* Load from storage */
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = safeStorage.getItem(STORAGE_KEY);
     if (!stored) return;
 
     try {
@@ -44,13 +65,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         setItems([]);
       }
     } catch (e) {
+      console.warn("Error al cargar carrito:", e);
       setItems([]);
     }
   }, []);
 
   /* Persist */
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    safeStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }, [items]);
 
   /* Actions */

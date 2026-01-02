@@ -35,7 +35,7 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
   const [showClearDialog, setShowClearDialog] = useState(false);
 
   /* ================================
-     📲 Enviar consulta
+     📲 Enviar consulta (Safari-compatible)
   ================================ */
   const handleWhatsAppClick = async () => {
     if (items.length === 0) return;
@@ -67,17 +67,27 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
         response.whatsappMessage
       )}`;
 
-      // Crear un link y hacer click para que funcione en Safari iOS
-      const link = document.createElement('a');
-      link.href = whatsappUrl;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // Método compatible con Safari iOS y todos los navegadores
+      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
-      clearCart();
-      onClose();
+      if (isIOS || isSafari) {
+        // Para Safari/iOS: usar window.location directamente
+        window.location.href = whatsappUrl;
+      } else {
+        // Para otros navegadores: usar window.open
+        const newWindow = window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+        if (!newWindow) {
+          // Fallback si el popup fue bloqueado
+          window.location.href = whatsappUrl;
+        }
+      }
+
+      // Limpiar carrito después de un pequeño delay para asegurar que se abrió WhatsApp
+      setTimeout(() => {
+        clearCart();
+        onClose();
+      }, 500);
 
       toast({
         description: "Consulta enviada exitosamente",
