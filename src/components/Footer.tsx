@@ -80,8 +80,7 @@ const Footer = () => {
                 <div className="flex items-start gap-3 text-sm text-muted-foreground">
                   <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary/70" />
                   <span className="leading-relaxed">
-                    Buenos Aires<br />
-                    Argentina
+                    Buenos Aires, Argentina
                   </span>
                 </div>
 
