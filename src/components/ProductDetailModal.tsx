@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Package, PackageX, Plus, Check, X } from "lucide-react"
 import { useCart } from "@/context/CartContext"
-import { motion, AnimatePresence } from "framer-motion"
 import { memo, useCallback, useState } from "react"
 
 interface Props {
@@ -21,7 +20,6 @@ const ProductDetailModal = memo(({ product, open, onClose }: Props) => {
   const handleOpenChange = useCallback((newOpen: boolean) => {
     if (!newOpen) {
       onClose()
-      // Reset image states when closing
       setTimeout(() => {
         setImageLoaded(false)
         setImageError(false)
@@ -51,49 +49,54 @@ const ProductDetailModal = memo(({ product, open, onClose }: Props) => {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         className="
-          w-[96vw] sm:w-[92vw] md:w-[90vw] lg:w-[85vw] xl:w-full
-          max-w-6xl
-          max-h-[90vh] sm:max-h-[85vh] lg:max-h-[80vh]  /* Cambiado de h-[92vh] a max-h para mejor control en móviles */
+          w-[95vw] sm:w-[90vw] lg:w-[85vw] xl:w-full
+          max-w-5xl
+          max-h-[95vh] sm:max-h-[90vh]
           p-0
           bg-neutral-950
           border border-white/10
           flex flex-col
           overflow-hidden
+          gap-0
         "
         aria-describedby="product-description"
       >
-        {/* Accesibilidad: Título oculto visualmente */}
-        <DialogTitle className="sr-only">
-          {product.name}
-        </DialogTitle>
+        <DialogTitle className="sr-only">{product.name}</DialogTitle>
 
-        {/* Botón de cierre mejorado */}
+        {/* Botón de cierre - más grande en móviles */}
         <button
           onClick={onClose}
           aria-label="Cerrar modal"
           className="
-            absolute top-3 right-3 z-50 
-            bg-black/60 backdrop-blur-sm rounded-full p-2 
-            text-white/80 hover:text-white hover:bg-black/80 
+            absolute top-2 right-2 sm:top-3 sm:right-3 z-50 
+            bg-black/70 backdrop-blur-sm rounded-full 
+            p-2.5 sm:p-2
+            text-white/90 hover:text-white hover:bg-black/90 
             transition-all duration-200
-            focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-neutral-950
+            focus:outline-none focus:ring-2 focus:ring-cyan-500
+            touch-manipulation
           "
         >
-          <X className="w-5 h-5" />
+          <X className="w-5 h-5 sm:w-4 sm:h-4" />
         </button>
 
-        {/* Layout principal */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 h-full min-h-0">
+        {/* Layout adaptativo */}
+        <div className="flex flex-col lg:grid lg:grid-cols-2 h-full overflow-hidden">
 
-          {/* Imagen optimizada para móviles - reducida en altura para ocupar menos espacio */}
-          <div className="relative w-full h-[150px] sm:h-[200px] md:h-[250px] lg:h-full overflow-hidden bg-neutral-900">  {/* Alturas reducidas en móviles y tablets */}
+          {/* Imagen - compacta en móviles, más grande en desktop */}
+          <div className="
+            relative w-full 
+            h-[35vh] sm:h-[40vh] lg:h-full
+            flex-shrink-0
+            overflow-hidden bg-neutral-900
+          ">
             
-            {/* Skeleton loader mientras carga */}
+            {/* Skeleton loader */}
             {!imageLoaded && !imageError && (
               <div className="absolute inset-0 bg-neutral-800 animate-pulse" />
             )}
 
-            {/* Imagen con optimizaciones */}
+            {/* Imagen optimizada */}
             {!imageError ? (
               <img
                 src={product.image}
@@ -114,47 +117,51 @@ const ProductDetailModal = memo(({ product, open, onClose }: Props) => {
                 }}
               />
             ) : (
-              /* Fallback si la imagen falla */
               <div className="absolute inset-0 flex items-center justify-center bg-neutral-800">
-                <Package className="w-16 h-16 text-neutral-600" />
+                <Package className="w-12 h-12 sm:w-16 sm:h-16 text-neutral-600" />
               </div>
             )}
 
-            {/* Gradiente overlay - solo visible cuando la imagen carga */}
+            {/* Gradiente */}
             {imageLoaded && !imageError && (
-              <div 
-                className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none"
-                style={{ willChange: 'auto' }}
-              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
             )}
           </div>
 
-          {/* Panel de información */}
-          <div className="flex flex-col h-full min-h-0">
+          {/* Panel de información - scroll optimizado */}
+          <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
 
-            {/* Contenido scrollable */}
+            {/* Contenido scrollable con mejor spacing */}
             <div 
-              className="flex-1 min-h-0 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-10 lg:py-8 space-y-5"
+              className="
+                flex-1 overflow-y-auto overflow-x-hidden
+                px-5 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8
+                space-y-4 sm:space-y-5
+              "
               style={{ 
                 WebkitOverflowScrolling: 'touch',
                 overscrollBehavior: 'contain'
               }}
             >
 
-              {/* Título */}
-              <h2 
-                className="text-xl sm:text-3xl lg:text-4xl font-bold tracking-tight pr-10 lg:pr-0 text-white"
-                aria-live="polite"
-              >
+              {/* Título - más legible en móviles */}
+              <h2 className="
+                text-2xl sm:text-3xl lg:text-4xl 
+                font-bold tracking-tight 
+                text-white
+                leading-tight
+                pr-8
+              ">
                 {product.name}
               </h2>
 
-              {/* Badges mejorados */}
-              <div className="flex flex-wrap gap-2" role="status" aria-live="polite">
+              {/* Badges - más espaciados */}
+              <div className="flex flex-wrap gap-2.5">
                 <Badge
                   className={`
-                    px-2.5 py-1 text-xs sm:text-sm font-semibold 
-                    flex items-center gap-1.5 transition-colors
+                    px-3 py-1.5 
+                    text-sm font-semibold 
+                    flex items-center gap-2
                     ${product.inStock
                       ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                       : "bg-red-500/20 text-red-400 border border-red-500/30"
@@ -163,12 +170,12 @@ const ProductDetailModal = memo(({ product, open, onClose }: Props) => {
                 >
                   {product.inStock ? (
                     <>
-                      <Package className="w-4 h-4" aria-hidden="true" />
+                      <Package className="w-4 h-4" />
                       <span>Disponible</span>
                     </>
                   ) : (
                     <>
-                      <PackageX className="w-4 h-4" aria-hidden="true" />
+                      <PackageX className="w-4 h-4" />
                       <span>No disponible</span>
                     </>
                   )}
@@ -176,79 +183,70 @@ const ProductDetailModal = memo(({ product, open, onClose }: Props) => {
 
                 <Badge
                   variant="outline"
-                  className="px-2.5 py-1 text-xs sm:text-sm bg-purple-500/20 text-purple-400 border-purple-500/40 font-semibold"
+                  className="px-3 py-1.5 text-sm bg-purple-500/20 text-purple-400 border-purple-500/40 font-semibold"
                 >
                   {product.category}
                 </Badge>
               </div>
 
-              {/* Descripción */}
-              <div id="product-description">
-                <p className="text-sm sm:text-base text-gray-300 leading-relaxed whitespace-pre-line">
+              {/* Descripción - mejor legibilidad */}
+              <div id="product-description" className="pb-2">
+                <p className="
+                  text-base sm:text-lg
+                  text-gray-300 
+                  leading-relaxed
+                  whitespace-pre-line
+                ">
                   {product.description}
                 </p>
               </div>
+
             </div>
 
-            {/* CTA sticky con animación optimizada */}
-            <div
-              className="
-                sticky bottom-0 z-40
-                border-t border-white/10
-                p-4 sm:p-5
-                bg-neutral-950/95 backdrop-blur-sm
-              "
-            >
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={inCart ? 'in-cart' : 'add-to-cart'}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Button
-                    disabled={!canAddToCart}
-                    onClick={handleAddToCart}
-                    size="lg"
-                    variant={inCart ? "outline" : "default"}
-                    className={`
-                      w-full font-semibold transition-all
-                      focus:ring-2 focus:ring-offset-2 focus:ring-offset-neutral-950
-                      ${inCart
-                        ? "bg-cyan-500/20 text-cyan-400 border-cyan-500/50 hover:bg-cyan-500/30 focus:ring-cyan-500"
-                        : product.inStock
-                        ? "bg-cyan-500 hover:bg-cyan-600 text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30 focus:ring-cyan-500"
-                        : "bg-neutral-800/50 text-neutral-500 cursor-not-allowed border border-neutral-700/50"
-                      }
-                    `}
-                    aria-label={
-                      inCart 
-                        ? "Producto ya agregado a consulta" 
-                        : product.inStock 
-                        ? `Agregar ${product.name} a consulta`
-                        : "Producto no disponible"
-                    }
-                  >
-                    {inCart ? (
-                      <>
-                        <Check className="w-4 h-4 mr-2" aria-hidden="true" />
-                        Ya en consulta
-                      </>
-                    ) : product.inStock ? (
-                      <>
-                        <Plus className="w-4 h-4 mr-2" aria-hidden="true" />
-                        Agregar a consulta
-                      </>
-                    ) : (
-                      <>
-                        <PackageX className="w-4 h-4 mr-2" aria-hidden="true" />
-                        No disponible
-                      </>
-                    )}
-                  </Button>
-                </motion.div>
-              </AnimatePresence>
+            {/* CTA - siempre visible y accesible */}
+            <div className="
+              border-t border-white/10
+              px-5 py-4 sm:px-6 sm:py-5
+              bg-neutral-950
+              flex-shrink-0
+            ">
+              <Button
+                disabled={!canAddToCart}
+                onClick={handleAddToCart}
+                size="lg"
+                variant={inCart ? "outline" : "default"}
+                className={`
+                  w-full 
+                  h-12 sm:h-11
+                  font-semibold 
+                  text-base
+                  transition-all
+                  touch-manipulation
+                  ${inCart
+                    ? "bg-cyan-500/20 text-cyan-400 border-cyan-500/50 hover:bg-cyan-500/30"
+                    : product.inStock
+                    ? "bg-cyan-500 hover:bg-cyan-600 text-white shadow-lg shadow-cyan-500/20 active:scale-[0.98]"
+                    : "bg-neutral-800/50 text-neutral-500 cursor-not-allowed border border-neutral-700/50"
+                  }
+                `}
+              >
+                {inCart ? (
+                  <>
+                    <Check className="w-5 h-5 mr-2" />
+                    Ya en consulta
+                  </>
+                ) : product.inStock ? (
+                  <>
+                    <Plus className="w-5 h-5 mr-2" />
+                    Agregar a consulta
+                  </>
+                ) : (
+                  <>
+                    <PackageX className="w-5 h-5 mr-2" />
+                    No disponible
+                  </>
+                )}
+              </Button>
             </div>
 
           </div>
