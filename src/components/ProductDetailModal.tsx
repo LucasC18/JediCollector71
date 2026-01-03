@@ -53,7 +53,7 @@ const ProductDetailModal = memo(({ product, open, onClose }: Props) => {
         className="
           w-[96vw] sm:w-[92vw] md:w-[90vw] lg:w-[85vw] xl:w-full
           max-w-6xl
-          h-[92vh]
+          max-h-[90vh] sm:max-h-[85vh] lg:max-h-[80vh]  /* Cambiado de h-[92vh] a max-h para mejor control en móviles */
           p-0
           bg-neutral-950
           border border-white/10
@@ -85,8 +85,8 @@ const ProductDetailModal = memo(({ product, open, onClose }: Props) => {
         {/* Layout principal */}
         <div className="grid grid-cols-1 lg:grid-cols-2 h-full min-h-0">
 
-          {/* Imagen optimizada para móviles */}
-          <div className="relative w-full h-[220px] sm:h-[300px] lg:h-full overflow-hidden bg-neutral-900">
+          {/* Imagen optimizada para móviles - reducida en altura para ocupar menos espacio */}
+          <div className="relative w-full h-[150px] sm:h-[200px] md:h-[250px] lg:h-full overflow-hidden bg-neutral-900">  {/* Alturas reducidas en móviles y tablets */}
             
             {/* Skeleton loader mientras carga */}
             {!imageLoaded && !imageError && (
