@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Package, PackageX, Plus, Check, X } from "lucide-react"
 import { useCart } from "@/context/CartContext"
 import { motion, AnimatePresence } from "framer-motion"
-import { memo, useCallback } from "react"
+import { memo, useCallback, useState } from "react"
 
 interface Props {
   product: Product | null
@@ -15,14 +15,32 @@ interface Props {
 
 const ProductDetailModal = memo(({ product, open, onClose }: Props) => {
   const { addToCart, isInCart } = useCart()
+  const [imageLoaded, setImageLoaded] = useState(false)
+  const [imageError, setImageError] = useState(false)
 
   const handleOpenChange = useCallback((newOpen: boolean) => {
-    if (!newOpen) onClose()
+    if (!newOpen) {
+      onClose()
+      // Reset image states when closing
+      setTimeout(() => {
+        setImageLoaded(false)
+        setImageError(false)
+      }, 300)
+    }
   }, [onClose])
 
   const handleAddToCart = useCallback(() => {
     if (product) addToCart(product)
   }, [product, addToCart])
+
+  const handleImageLoad = useCallback(() => {
+    setImageLoaded(true)
+  }, [])
+
+  const handleImageError = useCallback(() => {
+    setImageError(true)
+    setImageLoaded(true)
+  }, [])
 
   if (!product) return null
 
@@ -67,25 +85,61 @@ const ProductDetailModal = memo(({ product, open, onClose }: Props) => {
         {/* Layout principal */}
         <div className="grid grid-cols-1 lg:grid-cols-2 h-full min-h-0">
 
-          {/* Imagen con animación optimizada */}
+          {/* Imagen optimizada para móviles */}
           <div className="relative w-full h-[220px] sm:h-[300px] lg:h-full overflow-hidden bg-neutral-900">
-            <motion.img
-              src={product.image}
-              alt={product.name}
-              loading="lazy"
-              className="w-full h-full object-cover"
-              initial={{ scale: 1.05, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
+            
+            {/* Skeleton loader mientras carga */}
+            {!imageLoaded && !imageError && (
+              <div className="absolute inset-0 bg-neutral-800 animate-pulse" />
+            )}
+
+            {/* Imagen con optimizaciones */}
+            {!imageError ? (
+              <img
+                src={product.image}
+                alt={product.name}
+                onLoad={handleImageLoad}
+                onError={handleImageError}
+                loading="eager"
+                decoding="async"
+                className={`
+                  w-full h-full object-cover
+                  transition-opacity duration-500
+                  ${imageLoaded ? 'opacity-100' : 'opacity-0'}
+                `}
+                style={{
+                  willChange: imageLoaded ? 'auto' : 'opacity',
+                  transform: 'translateZ(0)',
+                  backfaceVisibility: 'hidden'
+                }}
+              />
+            ) : (
+              /* Fallback si la imagen falla */
+              <div className="absolute inset-0 flex items-center justify-center bg-neutral-800">
+                <Package className="w-16 h-16 text-neutral-600" />
+              </div>
+            )}
+
+            {/* Gradiente overlay - solo visible cuando la imagen carga */}
+            {imageLoaded && !imageError && (
+              <div 
+                className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none"
+                style={{ willChange: 'auto' }}
+              />
+            )}
           </div>
 
           {/* Panel de información */}
           <div className="flex flex-col h-full min-h-0">
 
             {/* Contenido scrollable */}
-            <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-10 lg:py-8 space-y-5">
+            <div 
+              className="flex-1 min-h-0 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-10 lg:py-8 space-y-5"
+              style={{ 
+                WebkitOverflowScrolling: 'touch',
+                overscrollBehavior: 'contain'
+              }}
+            >
 
               {/* Título */}
               <h2 
@@ -136,7 +190,7 @@ const ProductDetailModal = memo(({ product, open, onClose }: Props) => {
               </div>
             </div>
 
-            {/* CTA sticky con animación */}
+            {/* CTA sticky con animación optimizada */}
             <div
               className="
                 sticky bottom-0 z-40
