@@ -45,7 +45,7 @@ const SearchBar = ({ value, onChange }: SearchBarProps) => {
         placeholder="Buscar personajes..."
         value={localValue}
         onChange={(e) => setLocalValue(e.target.value)}
-        aria-label="Buscar productos LEGO"
+        aria-label="Buscar personajes"
         className="pl-12 pr-10 py-6 bg-card/50 border-primary/20 focus:border-primary focus:ring-primary/20 text-foreground placeholder:text-muted-foreground neon-border"
       />
 

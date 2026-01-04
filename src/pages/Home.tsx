@@ -46,7 +46,7 @@ const Home = () => {
         >
           <img
             src={heroImage}
-            alt="Mike&Co LEGO Collection"
+            alt="JediCollector71 Hero"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />

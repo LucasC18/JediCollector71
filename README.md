@@ -1,4 +1,4 @@
-# LEGO Showcase Studio
+# Personajes Showcase Studio
 
 Frontend (Vite + React + TypeScript + Tailwind + shadcn/ui)
 
