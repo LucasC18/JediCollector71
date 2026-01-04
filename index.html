@@ -6,11 +6,11 @@
 
     <title>Coleccion de Personajes</title>
 
-    <!-- ICONOS (rutas RELATIVAS, no absolutas) -->
-    <link rel="icon" type="image/png" href="estrella-de-la-muerte.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="estrella-de-la-muerte.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="estrella-de-la-muerte.png" />
-    <link rel="apple-touch-icon" href="estrella-de-la-muerte.png" />
+    <!-- ICONOS (rutas ABSOLUTAS desde la raíz) -->
+    <link rel="icon" type="image/png" href="/estrella-de-la-muerte.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/estrella-de-la-muerte.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/estrella-de-la-muerte.png" />
+    <link rel="apple-touch-icon" href="/estrella-de-la-muerte.png" />
 
     <!-- SEO -->
     <meta
@@ -26,7 +26,7 @@
       content="Explora los personajes de: Star Wars, Harry Potter, Marvel y más. Consulta por WhatsApp."
     />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="estrella-de-la-muerte.png" />
+    <meta property="og:image" content="/estrella-de-la-muerte.png" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -35,13 +35,13 @@
       name="twitter:description"
       content="Explora los personajes de: Star Wars, Harry Potter, Marvel y más."
     />
-    <meta name="twitter:image" content="estrella-de-la-muerte.png" />
+    <meta name="twitter:image" content="/estrella-de-la-muerte.png" />
   </head>
 
   <body>
     <div id="root"></div>
 
-    <!-- SCRIPT PRINCIPAL (RELATIVO, NO /src/...) -->
-    <script type="module" src="src/main.tsx"></script>
+    <!-- SCRIPT PRINCIPAL -->
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
