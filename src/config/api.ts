@@ -1,7 +1,6 @@
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 
-export const WHATSAPP_NUMBER = import.meta.env
-  .VITE_WHATSAPP_NUMBER as string | undefined;
+export const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_PHONE;
 
 export function getAuthToken(): string | null {
   return localStorage.getItem("mikeco_token");

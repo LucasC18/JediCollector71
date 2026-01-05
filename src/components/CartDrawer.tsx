@@ -63,12 +63,16 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
         throw new Error("No se pudo generar el mensaje de WhatsApp");
       }
 
-      const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+      const phone = WHATSAPP_NUMBER.replace(/\D/g, "");
+
+      const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(
         response.whatsappMessage
       )}`;
 
       // Método compatible con Safari iOS y todos los navegadores
-      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+      const isSafari = /^((?!chrome|android).)*safari/i.test(
+        navigator.userAgent
+      );
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
       if (isIOS || isSafari) {
@@ -76,7 +80,11 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
         window.location.href = whatsappUrl;
       } else {
         // Para otros navegadores: usar window.open
-        const newWindow = window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+        const newWindow = window.open(
+          whatsappUrl,
+          "_blank",
+          "noopener,noreferrer"
+        );
         if (!newWindow) {
           // Fallback si el popup fue bloqueado
           window.location.href = whatsappUrl;

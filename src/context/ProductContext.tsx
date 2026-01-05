@@ -48,30 +48,46 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
 
   const reload = async () => {
-    setIsLoading(true);
-    setError(null);
+  setIsLoading(true);
+  setError(null);
 
-    try {
-      const res = await apiFetch<{ items: ProductApiDTO[] }>(
-        "/api/v1/products"
-      );
+  try {
+    const allProducts: Product[] = [];
+    let page = 1;
+    const limit = 100;
 
-      const mappedProducts = Array.isArray(res.items)
+    while (true) {
+      const res = await apiFetch<{
+        items: ProductApiDTO[];
+        total: number;
+      }>(`/api/v1/products?page=${page}&limit=${limit}`);
+
+      const items = Array.isArray(res.items)
         ? res.items.map(mapProductFromApi)
         : [];
 
-      setProducts(mappedProducts);
-    } catch (e: unknown) {
-      if (e instanceof Error) {
-        setError(e.message);
-      } else {
-        setError("Error cargando productos");
+      allProducts.push(...items);
+
+      if (items.length < limit) {
+        break; // no hay más páginas
       }
-      setProducts([]);
-    } finally {
-      setIsLoading(false);
+
+      page++;
     }
-  };
+
+    setProducts(allProducts);
+  } catch (e: unknown) {
+    if (e instanceof Error) {
+      setError(e.message);
+    } else {
+      setError("Error cargando productos");
+    }
+    setProducts([]);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   useEffect(() => {
     void reload();
