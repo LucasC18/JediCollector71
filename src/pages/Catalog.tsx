@@ -76,10 +76,15 @@ const Catalog = () => {
     });
   }, [products, debouncedQuery, selectedCategories, showOnlyInStock]);
 
+  /* =======================
+     Reset page only if current page is invalid after filtering
+     ======================= */
   useEffect(() => {
-  setCurrentPage(1);
-}, [debouncedQuery, selectedCategories, showOnlyInStock]);
-
+    const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [filteredProducts, currentPage]);
 
   /* =======================
      Pagination
@@ -142,6 +147,11 @@ const Catalog = () => {
 
   const handleStockFilterChange = (value: boolean) => {
     setShowOnlyInStock(value);
+  };
+
+  const handlePageChange = (page: number) => {
+    console.log(`Cambiando a página: ${page}`); // Log para depuración
+    setCurrentPage(page);
   };
 
   return (
@@ -220,7 +230,7 @@ const Catalog = () => {
           >
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
                 className="px-4 py-2 rounded-lg border border-border bg-background hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
@@ -240,7 +250,7 @@ const Catalog = () => {
                   return (
                     <button
                       key={page}
-                      onClick={() => setCurrentPage(page as number)}
+                      onClick={() => handlePageChange(page as number)}
                       className={`px-4 py-2 rounded-lg border transition-colors ${
                         currentPage === page
                           ? "bg-primary text-primary-foreground border-primary"
@@ -254,9 +264,7 @@ const Catalog = () => {
               </div>
 
               <button
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(totalPages, p + 1))
-                }
+                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
                 className="px-4 py-2 rounded-lg border border-border bg-background hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
