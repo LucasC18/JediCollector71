@@ -128,13 +128,17 @@ const CategoryCard = ({
   count: number;
   category: string;
 }) => {
+  const handleClick = () => {
+    window.location.href = `/?category=${encodeURIComponent(category)}`;
+  };
+
   return (
-    <a href={`/?category=${category}`}>
-      <motion.div
-        whileHover={{ scale: 1.08, y: -10 }}
-        whileTap={{ scale: 0.95 }}
-        className="glass-card rounded-2xl p-8 cursor-pointer group relative overflow-hidden"
-      >
+    <motion.div
+      onClick={handleClick}
+      whileHover={{ scale: 1.08, y: -10 }}
+      whileTap={{ scale: 0.95 }}
+      className="glass-card rounded-2xl p-8 cursor-pointer group relative overflow-hidden"
+    >
         {/* Efecto de brillo animado */}
         <motion.div 
           className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
@@ -176,35 +180,34 @@ const CategoryCard = ({
           />
         </div>
         
-        <div className="relative z-10 space-y-4">
-          <motion.div 
-            className="text-5xl"
-            whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.2 }}
-            transition={{ duration: 0.5 }}
-          >
-            {icon}
-          </motion.div>
-          <h3 className="font-display font-bold text-xl text-foreground group-hover:text-primary transition-colors">
-            {name}
-          </h3>
-          <p className="text-sm text-muted-foreground flex items-center gap-2">
-            <Package className="w-4 h-4" />
-            {count} productos
-          </p>
-        </div>
-        
-        {/* Indicador de click */}
-        <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-          <motion.div
-            animate={{ x: [0, 5, 0] }}
-            transition={{ duration: 1, repeat: Infinity }}
-            className="text-primary text-sm font-semibold"
-          >
-            Ver →
-          </motion.div>
-        </div>
-      </motion.div>
-    </a>
+      <div className="relative z-10 space-y-4">
+        <motion.div 
+          className="text-5xl"
+          whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.2 }}
+          transition={{ duration: 0.5 }}
+        >
+          {icon}
+        </motion.div>
+        <h3 className="font-display font-bold text-xl text-foreground group-hover:text-primary transition-colors">
+          {name}
+        </h3>
+        <p className="text-sm text-muted-foreground flex items-center gap-2">
+          <Package className="w-4 h-4" />
+          {count} productos
+        </p>
+      </div>
+      
+      {/* Indicador de click */}
+      <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+        <motion.div
+          animate={{ x: [0, 5, 0] }}
+          transition={{ duration: 1, repeat: Infinity }}
+          className="text-primary text-sm font-semibold"
+        >
+          Ver →
+        </motion.div>
+      </div>
+    </motion.div>
   );
 };
 
@@ -546,14 +549,14 @@ const About = () => {
                 Explorá nuestro catálogo y encontrá tus personajes favoritos
               </p>
               
-              <motion.a
-                href="/"
+              <motion.button
+                onClick={() => window.location.href = '/'}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="inline-block px-8 py-4 bg-gradient-to-r from-primary to-primary/80 text-white font-semibold rounded-xl shadow-lg hover:shadow-primary/50 transition-shadow"
+                className="px-8 py-4 bg-gradient-to-r from-primary to-primary/80 text-white font-semibold rounded-xl shadow-lg hover:shadow-primary/50 transition-shadow cursor-pointer"
               >
                 Ver Catálogo Completo
-              </motion.a>
+              </motion.button>
             </div>
           </div>
         </motion.section>
