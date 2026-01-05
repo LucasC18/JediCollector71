@@ -499,8 +499,9 @@ const About = () => {
             reduceMotion={!!reduceMotion}
           />
           <StatCard
-            value={5}
+            value={10}
             label="Años de experiencia"
+            suffix="+"
             icon={Calendar}
             emoji="📅"
             reduceMotion={!!reduceMotion}
