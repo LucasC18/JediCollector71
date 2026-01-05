@@ -79,12 +79,11 @@ const Catalog = () => {
   /* =======================
      Reset page only if current page is invalid after filtering
      ======================= */
-  useEffect(() => {
-    const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
-    if (currentPage > totalPages && totalPages > 0) {
-      setCurrentPage(1);
-    }
-  }, [filteredProducts, currentPage]);
+  
+    useEffect(() => {
+  setCurrentPage(1);
+}, [debouncedQuery, selectedCategories, showOnlyInStock]);
+
 
   /* =======================
      Pagination
