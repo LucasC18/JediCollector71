@@ -79,7 +79,7 @@ const StatCard = ({
       className="glass-card rounded-2xl p-8 text-center space-y-4 relative overflow-hidden group"
     >
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-      
+
       <div className="relative z-10">
         <div className="flex justify-center items-center gap-3 mb-4">
           <span className="text-3xl">{emoji}</span>
@@ -116,22 +116,23 @@ const CategoryCard = ({
   <motion.div
     role="button"
     tabIndex={0}
+    aria-label={`Ver categoría ${name}`}
     onClick={onClick}
     onKeyDown={(e) => e.key === "Enter" && onClick()}
     whileHover={{ y: -10, scale: 1.08 }}
     whileTap={{ scale: 0.95 }}
     className="glass-card rounded-2xl p-8 cursor-pointer text-center space-y-4 relative overflow-hidden group"
   >
-    {/* Efecto de brillo */}
+    {/* Efecto de brillo animado */}
     <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-    
+
     {/* Partículas flotantes */}
-    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
+    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
       <motion.div
         className="absolute top-1/4 left-1/4 w-2 h-2 bg-primary/30 rounded-full"
         animate={{
           y: [0, -20, 0],
-          opacity: [0, 1, 0]
+          opacity: [0, 1, 0],
         }}
         transition={{
           duration: 2,
@@ -142,32 +143,37 @@ const CategoryCard = ({
         className="absolute top-1/2 right-1/3 w-1.5 h-1.5 bg-primary/40 rounded-full"
         animate={{
           y: [0, -15, 0],
-          opacity: [0, 1, 0]
+          opacity: [0, 1, 0],
         }}
         transition={{
           duration: 2,
           repeat: Infinity,
-          delay: 0.5
+          delay: 0.5,
         }}
       />
     </div>
 
     <div className="relative z-10 space-y-4">
-      <motion.div 
+      <motion.div
         className="text-5xl"
         whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.2 }}
         transition={{ duration: 0.5 }}
       >
         {emoji}
       </motion.div>
+
       <h3 className="font-display font-bold text-xl group-hover:text-primary transition-colors">
         {name}
       </h3>
+
       <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
         <Package className="w-4 h-4" />
         {count} productos
       </p>
-      <span className="text-primary font-semibold text-sm">Ver categoría →</span>
+
+      <span className="text-primary font-semibold text-sm">
+        Ver categoría →
+      </span>
     </div>
   </motion.div>
 );
@@ -185,10 +191,13 @@ const FAQItem = ({ q, a }: { q: string; a: string }) => {
     >
       <button
         aria-expanded={open}
+        aria-label={open ? `Cerrar: ${q}` : `Abrir: ${q}`}
         onClick={() => setOpen(!open)}
         className="w-full p-6 flex justify-between items-center text-left hover:bg-primary/5 transition-colors group"
       >
-        <span className="font-semibold group-hover:text-primary transition-colors">{q}</span>
+        <span className="font-semibold group-hover:text-primary transition-colors pr-4">
+          {q}
+        </span>
         <motion.div
           animate={{ rotate: open ? 180 : 0 }}
           transition={{ duration: 0.3 }}
@@ -199,10 +208,7 @@ const FAQItem = ({ q, a }: { q: string; a: string }) => {
 
       <motion.div
         initial={false}
-        animate={{
-          height: open ? "auto" : 0,
-          opacity: open ? 1 : 0
-        }}
+        animate={{ height: open ? "auto" : 0, opacity: open ? 1 : 0 }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
         className="overflow-hidden"
       >
@@ -231,15 +237,21 @@ const FeatureCard = ({
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true }}
     whileHover={{ y: -5 }}
-    className="glass-card rounded-2xl p-6 space-y-3 text-center"
+    className="glass-card rounded-2xl p-6 space-y-3 text-center relative overflow-hidden group"
   >
-    <div className="flex justify-center">
-      <div className="p-3 bg-primary/10 rounded-xl w-fit">
-        <Icon className="w-6 h-6 text-primary" />
+    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+    
+    <div className="relative z-10">
+      <div className="flex justify-center mb-4">
+        <div className="p-3 bg-primary/10 rounded-xl w-fit group-hover:scale-110 transition-transform">
+          <Icon className="w-6 h-6 text-primary" />
+        </div>
       </div>
+      <h3 className="font-display font-semibold text-lg">{title}</h3>
+      <p className="text-sm text-muted-foreground leading-relaxed">
+        {description}
+      </p>
     </div>
-    <h3 className="font-display font-semibold text-lg">{title}</h3>
-    <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
   </motion.div>
 );
 
@@ -259,18 +271,18 @@ const StepCard = ({
     initial={{ opacity: 0, x: -20 }}
     whileInView={{ opacity: 1, x: 0 }}
     viewport={{ once: true }}
-    transition={{ delay: number * 0.1 }}
+    transition={{ delay: (number - 1) * 0.1 }}
     whileHover={{ y: -6 }}
     className="glass-card rounded-2xl p-6 space-y-4 relative overflow-hidden group"
   >
     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-    
+
     <div className="relative z-10 flex flex-col items-center text-center space-y-4">
-      <span className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 text-white flex items-center justify-center text-lg font-bold shadow-lg">
+      <span className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 text-white flex items-center justify-center text-lg font-bold shadow-lg group-hover:scale-110 transition-transform">
         {number}
       </span>
       <Icon className="w-8 h-8 text-primary" />
-      <p className="text-muted-foreground">{text}</p>
+      <p className="text-muted-foreground leading-relaxed">{text}</p>
     </div>
   </motion.div>
 );
@@ -282,85 +294,108 @@ const About = () => {
   const { products } = useProducts();
   const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
-  const heroRef = useRef(null);
-  
+  const heroRef = useRef<HTMLDivElement | null>(null);
+
+  /* Parallax controlado por reduceMotion */
   const { scrollYProgress } = useScroll({
     target: heroRef,
-    offset: ["start start", "end start"]
+    offset: ["start start", "end start"],
   });
-  
-  const y = useTransform(scrollYProgress, [0, 1], [0, 200]);
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
-  /* Categorías dinámicas reales */
+  const yTransform = useTransform(scrollYProgress, [0, 1], [0, 200]);
+  const opacityTransform = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  
+  const y = reduceMotion ? 0 : yTransform;
+  const opacity = reduceMotion ? 1 : opacityTransform;
+
+  /* =======================
+     Categorías dinámicas con emojis mejorados
+  ======================= */
+  const getCategoryEmoji = (name: string): string => {
+    const emojiMap: Record<string, string> = {
+      "Star Wars": "⚔️",
+      "Marvel": "🦸",
+      "Harry Potter": "🪄",
+      "DC Comics": "🦇",
+      "DC": "🦇",
+      "Anime": "🎌",
+      "Gaming": "🎮",
+      "Technic": "⚙️",
+      "LEGO": "🧱",
+    };
+    
+    return emojiMap[name] || "🎮";
+  };
+
   const categories = useMemo(() => {
     const map = new Map<string, number>();
-    products.forEach((p) =>
-      map.set(p.category, (map.get(p.category) ?? 0) + 1)
-    );
 
-    return Array.from(map.entries()).map(([name, count]) => ({
-      name,
-      count,
-      emoji:
-        name === "Star Wars"
-          ? "⚔️"
-          : name === "Marvel"
-          ? "🦸"
-          : name === "Harry Potter"
-          ? "🪄"
-          : name === "DC Comics"
-          ? "🦇"
-          : name === "Anime"
-          ? "🎌"
-          : "🎮",
-    }));
+    products.forEach((p) => {
+      const key = p.category || "Otros";
+      map.set(key, (map.get(key) ?? 0) + 1);
+    });
+
+    return Array.from(map.entries())
+      .map(([name, count]) => ({
+        name,
+        count,
+        emoji: getCategoryEmoji(name),
+      }))
+      .sort((a, b) => b.count - a.count); // Ordenar por cantidad
   }, [products]);
 
-  /* FAQs */
+  /* =======================
+     FAQs
+  ======================= */
   const faqs = [
     {
       q: "¿Cómo puedo realizar una compra?",
-      a: "No vendemos directamente por la web. Agregá los productos que te interesan al carrito de consulta y envianos el detalle por WhatsApp. Te responderemos con información sobre disponibilidad, precio y formas de pago."
+      a: "No vendemos directamente por la web. Agregá los productos que te interesan al carrito de consulta y envianos el detalle por WhatsApp. Te responderemos con información sobre disponibilidad, precio y formas de pago.",
     },
     {
       q: "¿Envían a todo el país?",
-      a: "Sí, realizamos envíos a toda Argentina. Coordinamos el método de envío más conveniente según tu ubicación a través de WhatsApp."
+      a: "Sí, realizamos envíos a toda Argentina. Coordinamos el método de envío más conveniente según tu ubicación a través de WhatsApp.",
     },
     {
       q: "¿Los productos son originales?",
-      a: "Todos nuestros productos son figuras coleccionables de marcas reconocidas. Verificamos la autenticidad de cada pieza antes de ofrecerla."
+      a: "Todos nuestros productos son figuras coleccionables de marcas reconocidas. Verificamos la autenticidad de cada pieza antes de ofrecerla.",
     },
     {
       q: "¿Puedo reservar un producto?",
-      a: "Sí, podés consultar por WhatsApp para reservar productos con una seña. Te indicaremos el proceso según disponibilidad."
+      a: "Sí, podés consultar por WhatsApp para reservar productos con una seña. Te indicaremos el proceso según disponibilidad.",
     },
     {
       q: "¿Hacen descuentos por cantidad?",
-      a: "Consultanos por WhatsApp si estás interesado en varios productos. Evaluamos cada caso de forma personalizada."
+      a: "Consultanos por WhatsApp si estás interesado en varios productos. Evaluamos cada caso de forma personalizada.",
     },
     {
       q: "¿Cuál es el estado de los productos?",
-      a: "Especificamos claramente el estado de cada producto: Nuevo, Usado o Armado. Todos los detalles se proporcionan antes de la compra."
-    }
+      a: "Especificamos claramente el estado de cada producto: Nuevo, Usado o Armado. Todos los detalles se proporcionan antes de la compra.",
+    },
   ];
 
+  /* =======================
+     Features
+  ======================= */
   const features = [
     {
       icon: Shield,
       title: "Productos Auténticos",
-      description: "Verificamos la autenticidad de cada figura coleccionable antes de ofrecerla."
+      description:
+        "Verificamos la autenticidad de cada figura coleccionable antes de ofrecerla.",
     },
     {
       icon: MessageCircle,
       title: "Atención Personalizada",
-      description: "Respondemos todas tus consultas por WhatsApp de forma rápida y detallada."
+      description:
+        "Respondemos todas tus consultas por WhatsApp de forma rápida y detallada.",
     },
     {
       icon: Truck,
       title: "Envíos Seguros",
-      description: "Empaque cuidadoso y seguimiento de cada envío hasta tu puerta."
-    }
+      description:
+        "Empaque cuidadoso y seguimiento de cada envío hasta tu puerta.",
+    },
   ];
 
   return (
@@ -386,7 +421,7 @@ const About = () => {
             </div>
           </motion.div>
 
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
@@ -396,14 +431,14 @@ const About = () => {
             <span className="text-gradient">JediCollector71</span>
           </motion.h1>
 
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
             className="text-muted-foreground text-xl max-w-3xl mx-auto leading-relaxed"
           >
-            Tu destino definitivo para coleccionar personajes épicos de tus series y películas favoritas. 
-            Cada figura cuenta una historia.
+            Tu destino definitivo para coleccionar personajes épicos de tus
+            series y películas favoritas. Cada figura cuenta una historia.
           </motion.p>
         </motion.section>
 
@@ -445,32 +480,38 @@ const About = () => {
           transition={{ duration: 0.6 }}
           className="max-w-5xl mx-auto mb-24"
         >
-          <motion.div 
+          <motion.div
             whileHover={{ y: -5 }}
-            className="glass-card rounded-3xl p-10 space-y-6 border border-primary/10"
+            className="glass-card rounded-3xl p-10 space-y-6 border border-primary/10 relative overflow-hidden"
           >
-            <div className="flex items-center gap-3 justify-center">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Heart className="w-6 h-6 text-primary" />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 opacity-0 hover:opacity-100 transition-opacity duration-500" />
+            
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 justify-center mb-6">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Heart className="w-6 h-6 text-primary" />
+                </div>
+                <h2 className="font-display text-3xl md:text-4xl font-semibold text-primary">
+                  ¿Quiénes somos?
+                </h2>
               </div>
-              <h2 className="font-display text-3xl font-semibold text-primary">
-                ¿Quiénes somos?
-              </h2>
+
+              <div className="space-y-4">
+                <p className="text-muted-foreground text-lg leading-relaxed text-center">
+                  En JediCollector71 presentamos un universo de personajes
+                  organizados por temáticas como Star Wars, Harry Potter, Marvel, DC
+                  Comics y más. Nuestro objetivo es que puedas explorar, comparar y
+                  descubrir productos de forma clara y visual.
+                </p>
+
+                <p className="text-muted-foreground text-lg leading-relaxed text-center">
+                  No realizamos ventas directas desde la web. Todas las consultas se
+                  gestionan de manera personalizada a través de WhatsApp, para
+                  brindarte información detallada sobre disponibilidad, estado y
+                  características de cada producto.
+                </p>
+              </div>
             </div>
-
-            <p className="text-muted-foreground text-lg leading-relaxed text-center">
-              En JediCollector71 presentamos un universo de personajes organizados por
-              temáticas como Star Wars, Harry Potter, Marvel, DC Comics y más.
-              Nuestro objetivo es que puedas explorar, comparar y descubrir
-              productos de forma clara y visual.
-            </p>
-
-            <p className="text-muted-foreground text-lg leading-relaxed text-center">
-              No realizamos ventas directas desde la web. Todas las consultas se
-              gestionan de manera personalizada a través de WhatsApp, para
-              brindarte información detallada sobre disponibilidad, estado y
-              características de cada producto.
-            </p>
           </motion.div>
         </motion.section>
 
@@ -509,35 +550,39 @@ const About = () => {
           transition={{ duration: 0.6 }}
           className="max-w-5xl mx-auto mb-24"
         >
-          <motion.div 
+          <motion.div
             whileHover={{ y: -5 }}
-            className="glass-card rounded-3xl p-10 space-y-8 border border-primary/10"
+            className="glass-card rounded-3xl p-10 space-y-8 border border-primary/10 relative overflow-hidden"
           >
-            <div className="flex items-center gap-3 justify-center">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Zap className="w-6 h-6 text-primary" />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 opacity-0 hover:opacity-100 transition-opacity duration-500" />
+            
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 justify-center mb-8">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Zap className="w-6 h-6 text-primary" />
+                </div>
+                <h2 className="font-display text-3xl md:text-4xl font-semibold text-primary">
+                  ¿Cómo funciona la consulta?
+                </h2>
               </div>
-              <h2 className="font-display text-3xl font-semibold text-primary">
-                ¿Cómo funciona la consulta?
-              </h2>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <StepCard
-                number={1}
-                icon={Search}
-                text="Explorás el catálogo y filtrás por categoría o disponibilidad"
-              />
-              <StepCard
-                number={2}
-                icon={Package}
-                text="Agregás los productos que te interesan a la consulta"
-              />
-              <StepCard
-                number={3}
-                icon={MessageCircle}
-                text="Enviás la consulta por WhatsApp y respondemos de forma personalizada"
-              />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <StepCard
+                  number={1}
+                  icon={Search}
+                  text="Explorás el catálogo y filtrás por categoría o disponibilidad"
+                />
+                <StepCard
+                  number={2}
+                  icon={Package}
+                  text="Agregás los productos que te interesan a la consulta"
+                />
+                <StepCard
+                  number={3}
+                  icon={MessageCircle}
+                  text="Enviás la consulta por WhatsApp y respondemos de forma personalizada"
+                />
+              </div>
             </div>
           </motion.div>
         </motion.section>
@@ -563,10 +608,10 @@ const About = () => {
             {categories.map((c, index) => (
               <motion.div
                 key={c.name}
-                initial={{ opacity: 0, scale: 0.8 }}
+                initial={{ opacity: 0, scale: 0.85 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: index * 0.08 }}
               >
                 <CategoryCard
                   name={c.name}
@@ -605,7 +650,7 @@ const About = () => {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.08 }}
+                transition={{ delay: index * 0.06 }}
               >
                 <FAQItem q={f.q} a={f.a} />
               </motion.div>
@@ -622,7 +667,7 @@ const About = () => {
         >
           <div className="glass-card rounded-3xl p-12 space-y-6 border border-primary/20 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5" />
-            
+
             <div className="relative z-10">
               <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
                 ¿Listo para comenzar tu colección?
@@ -630,7 +675,7 @@ const About = () => {
               <p className="text-muted-foreground text-lg mb-8">
                 Explorá nuestro catálogo y encontrá tus personajes favoritos
               </p>
-              
+
               <motion.button
                 onClick={() => navigate("/catalogo")}
                 whileHover={!reduceMotion ? { scale: 1.05 } : undefined}

@@ -28,28 +28,30 @@ const Navbar = ({ onCartClick }: NavbarProps) => {
     >
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          {/* Logo */}
-          <Link to="/">
-            <motion.div
-              className="flex items-center gap-2"
-              whileHover={{ scale: 1.02 }}
-            >
-              <h1 className="font-display text-xl md:text-2xl font-bold neon-text">
-                Jedi
-                <span className="text-secondary neon-text-magenta">
-                  Collector71
-                </span>
-              </h1>
-            </motion.div>
-          </Link>
+          {/* Logo - Ocupa espacio fijo */}
+          <div className="flex-1">
+            <Link to="/">
+              <motion.div
+                className="flex items-center gap-2 w-fit"
+                whileHover={{ scale: 1.02 }}
+              >
+                <h1 className="font-display text-xl md:text-2xl font-bold neon-text whitespace-nowrap">
+                  Jedi
+                  <span className="text-secondary neon-text-magenta">
+                    Collector71
+                  </span>
+                </h1>
+              </motion.div>
+            </Link>
+          </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
+          {/* Desktop Navigation - Centrado absoluto */}
+          <div className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
             {links.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
-                className={`text-sm font-medium transition-colors ${
+                className={`text-sm font-medium transition-colors whitespace-nowrap ${
                   location.pathname === link.href
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground"
@@ -60,8 +62,8 @@ const Navbar = ({ onCartClick }: NavbarProps) => {
             ))}
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-2">
+          {/* Actions - Ocupa espacio fijo */}
+          <div className="flex-1 flex items-center justify-end gap-2">
             <Button
               variant="outline"
               size="icon"
