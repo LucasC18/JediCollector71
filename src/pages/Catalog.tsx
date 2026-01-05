@@ -91,6 +91,45 @@ const Catalog = () => {
   }, [filteredProducts, currentPage]);
 
   /* =======================
+     Generate page numbers for pagination
+     ======================= */
+  const generatePageNumbers = () => {
+    const pages: (number | string)[] = [];
+
+    if (totalPages <= 5) {
+      // Show all pages if 5 or less
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always show first page
+      pages.push(1);
+
+      // Show ellipsis if there's a gap before the current range
+      if (currentPage > 3) {
+        pages.push("...");
+      }
+
+      // Show pages around current page (current -1, current, current +1)
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+
+      // Show ellipsis if there's a gap after the current range
+      if (currentPage < totalPages - 2) {
+        pages.push("...");
+      }
+
+      // Always show last page
+      pages.push(totalPages);
+    }
+
+    return pages;
+  };
+
+  /* =======================
      Handlers
      ======================= */
   const handleSearchChange = (value: string) => {
@@ -188,43 +227,29 @@ const Catalog = () => {
               </button>
 
               <div className="flex gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (page) => {
-                    const showPage =
-                      page === 1 ||
-                      page === totalPages ||
-                      Math.abs(page - currentPage) <= 1;
-
-                    const showEllipsis =
-                      (page === 2 && currentPage > 3) ||
-                      (page === totalPages - 1 &&
-                        currentPage < totalPages - 2);
-
-                    if (!showPage && !showEllipsis) return null;
-
-                    if (showEllipsis) {
-                      return (
-                        <span key={page} className="px-3 py-2 text-muted-foreground">
-                          ...
-                        </span>
-                      );
-                    }
-
+                {generatePageNumbers().map((page, index) => {
+                  if (page === "...") {
                     return (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`px-4 py-2 rounded-lg border transition-colors ${
-                          currentPage === page
-                            ? "bg-primary text-primary-foreground border-primary"
-                            : "border-border bg-background hover:bg-accent"
-                        }`}
-                      >
-                        {page}
-                      </button>
+                      <span key={`ellipsis-${index}`} className="px-3 py-2 text-muted-foreground">
+                        ...
+                      </span>
                     );
                   }
-                )}
+
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page as number)}
+                      className={`px-4 py-2 rounded-lg border transition-colors ${
+                        currentPage === page
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "border-border bg-background hover:bg-accent"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
               </div>
 
               <button
