@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import SearchBar from "@/components/SearchBar";
@@ -8,18 +8,31 @@ import CartDrawer from "@/components/CartDrawer";
 import { useProducts } from "@/context/ProductContext";
 import { Product } from "@/types/product";
 
+const PRODUCTS_PER_PAGE = 24;
+
 const Catalog = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [showOnlyInStock, setShowOnlyInStock] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const PRODUCTS_PER_PAGE = 24;
 
   /* =======================
      Products from context
      ======================= */
   const { products, isLoading } = useProducts();
+
+  /* =======================
+     Debounce search (performance)
+     ======================= */
+  useEffect(() => {
+    const id = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(id);
+  }, [searchQuery]);
 
   /* =======================
      Categories (dynamic)
@@ -41,40 +54,45 @@ const Catalog = () => {
         ? prev.filter((c) => c !== category)
         : [...prev, category]
     );
-    setCurrentPage(1); // Reset to first page when filters change
+    setCurrentPage(1);
   };
 
   /* =======================
-     Filtered products
+     Filtered products (optimized)
      ======================= */
   const filteredProducts = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
+    const query = debouncedQuery.trim().toLowerCase();
 
     return products.filter((product: Product) => {
-      const name = product.name.toLowerCase();
-      const category = product.category;
-      const inStock = product.inStock;
+      const matchesSearch =
+        query === "" || product.name.toLowerCase().includes(query);
 
-      const matchesSearch = query === "" || name.includes(query);
       const matchesCategory =
         selectedCategories.length === 0 ||
-        selectedCategories.includes(category);
-      const matchesStock = !showOnlyInStock || inStock;
+        selectedCategories.includes(product.category);
+
+      const matchesStock = !showOnlyInStock || product.inStock;
 
       return matchesSearch && matchesCategory && matchesStock;
     });
-  }, [products, searchQuery, selectedCategories, showOnlyInStock]);
+  }, [products, debouncedQuery, selectedCategories, showOnlyInStock]);
 
   /* =======================
      Pagination
      ======================= */
   const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
+
   const paginatedProducts = useMemo(() => {
     const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
-    return filteredProducts.slice(startIndex, startIndex + PRODUCTS_PER_PAGE);
+    return filteredProducts.slice(
+      startIndex,
+      startIndex + PRODUCTS_PER_PAGE
+    );
   }, [filteredProducts, currentPage]);
 
-  // Reset page when filters change
+  /* =======================
+     Handlers
+     ======================= */
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
     setCurrentPage(1);
@@ -122,11 +140,7 @@ const Catalog = () => {
         </div>
 
         {/* Results count */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="mb-6"
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6">
           <p className="text-muted-foreground text-sm">
             {isLoading ? (
               "Cargando productos..."
@@ -176,7 +190,6 @@ const Catalog = () => {
               <div className="flex gap-1">
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(
                   (page) => {
-                    // Show first page, last page, current page, and pages around current
                     const showPage =
                       page === 1 ||
                       page === totalPages ||
@@ -191,10 +204,7 @@ const Catalog = () => {
 
                     if (showEllipsis) {
                       return (
-                        <span
-                          key={page}
-                          className="px-3 py-2 text-muted-foreground"
-                        >
+                        <span key={page} className="px-3 py-2 text-muted-foreground">
                           ...
                         </span>
                       );

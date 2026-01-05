@@ -53,7 +53,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       const res = await apiFetch<{ items: ProductApiDTO[] }>(
-        "/api/v1/products?limit=100"
+        "/api/v1/products"
       );
 
       const mappedProducts = Array.isArray(res.items)
