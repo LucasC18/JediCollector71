@@ -25,34 +25,78 @@ import {
 } from "lucide-react";
 
 /* =========================================================
-   Hook contador animado
+   Hook contador animado (FIX: re-animar cuando cambia "end",
+   evitar animar con end=0 y respetar reduceMotion)
 ========================================================= */
-const useCounter = (end: number, duration = 2) => {
+const useCounter = (end: number, duration = 2, reduceMotion = false) => {
   const [count, setCount] = useState(0);
-  const [hasAnimated, setHasAnimated] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
   const isInView = useInView(ref, { once: true, margin: "-60px" });
 
-  useEffect(() => {
-    if (!isInView || hasAnimated) return;
+  const lastEndRef = useRef<number | null>(null);
+  const rafRef = useRef<number>(0);
+  const startRef = useRef<number | null>(null);
 
-    setHasAnimated(true);
-    let start: number | null = null;
-    let raf = 0;
+  useEffect(() => {
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Si reduceMotion: set directo cuando sea visible
+    if (!isInView) return;
+
+    // Evitar animar cuando end no es válido
+    const safeEnd = Number.isFinite(end) ? Math.max(0, Math.floor(end)) : 0;
+
+    // Si no cambia, no hagas nada
+    if (lastEndRef.current === safeEnd) return;
+
+    lastEndRef.current = safeEnd;
+
+    if (reduceMotion) {
+      setCount(safeEnd);
+      return;
+    }
+
+    // Cancelar animación previa si existía
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+
+    startRef.current = null;
+
+    const from = count; // partir del valor actual (no cambia UX, pero evita saltos raros)
+    const to = safeEnd;
+
+    // Si no hay cambio real
+    if (from === to) {
+      setCount(to);
+      return;
+    }
 
     const animate = (t: number) => {
-      if (!start) start = t;
-      const progress = Math.min((t - start) / (duration * 1000), 1);
-      const next = Math.floor(progress * end);
+      if (startRef.current == null) startRef.current = t;
+      const elapsed = t - (startRef.current ?? t);
+      const progress = Math.min(elapsed / (duration * 1000), 1);
 
+      const next = Math.floor(from + (to - from) * progress);
       setCount((prev) => (prev === next ? prev : next));
 
-      if (progress < 1) raf = requestAnimationFrame(animate);
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(animate);
+      }
     };
 
-    raf = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(raf);
-  }, [end, duration, isInView, hasAnimated]);
+    rafRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [end, duration, isInView, reduceMotion]);
+
+  // Si products llega después (end pasa de 0 a N), y ya estás inView,
+  // este efecto se encargará de re-animar correctamente.
 
   return { count, ref };
 };
@@ -111,14 +155,16 @@ const StatCard = ({
   suffix = "",
   icon: Icon,
   emoji,
+  reduceMotion,
 }: {
   value: number;
   label: string;
   suffix?: string;
   icon: React.ComponentType<{ className?: string }>;
   emoji: string;
+  reduceMotion: boolean;
 }) => {
-  const { count, ref } = useCounter(value);
+  const { count, ref } = useCounter(value, 2, reduceMotion);
 
   return (
     <motion.div
@@ -239,7 +285,10 @@ const FAQItem = ({ q, a }: { q: string; a: string }) => {
         <span className="font-semibold group-hover:text-primary transition-colors pr-4">
           {q}
         </span>
-        <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.3 }}>
+        <motion.div
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.3 }}
+        >
           <ChevronDown className="w-5 h-5 text-primary flex-shrink-0" />
         </motion.div>
       </button>
@@ -250,7 +299,9 @@ const FAQItem = ({ q, a }: { q: string; a: string }) => {
         transition={{ duration: 0.3, ease: "easeInOut" }}
         className="overflow-hidden"
       >
-        <div className="px-6 pb-6 text-muted-foreground leading-relaxed">{a}</div>
+        <div className="px-6 pb-6 text-muted-foreground leading-relaxed">
+          {a}
+        </div>
       </motion.div>
     </motion.div>
   );
@@ -287,7 +338,9 @@ const FeatureCard = ({
         </div>
       </div>
       <h3 className="font-display font-semibold text-lg">{title}</h3>
-      <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
+      <p className="text-sm text-muted-foreground leading-relaxed">
+        {description}
+      </p>
     </div>
   </motion.div>
 );
@@ -356,16 +409,16 @@ const About = () => {
   const getCategoryEmoji = (name: string) => {
     const map: Record<string, string> = {
       "Star Wars": "⚔️",
-      "Marvel": "🦸",
+      Marvel: "🦸",
       "Harry Potter": "🪄",
       "DC Comics": "🦇",
-      "DC": "🦇",
-      "Anime": "🎌",
-      "Gaming": "🎮",
-      "City": "🏙️",
-      "Ideas": "💡",
-      "Creator": "🎨",
-      "Technic": "⚙️",
+      DC: "🦇",
+      Anime: "🎌",
+      Gaming: "🎮",
+      City: "🏙️",
+      Ideas: "💡",
+      Creator: "🎨",
+      Technic: "⚙️",
     };
     return map[name] || "🎁";
   };
@@ -461,6 +514,14 @@ const About = () => {
     },
   ];
 
+  const goToCatalogWithCategory = (category: string) => {
+    const search = `?category=${encodeURIComponent(category)}`;
+    navigate(
+      { pathname: "/catalogo", search },
+      { state: { category } }
+    );
+  };
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       <BackgroundDecor />
@@ -500,6 +561,7 @@ const About = () => {
             suffix="+"
             icon={Package}
             emoji="📦"
+            reduceMotion={!!reduceMotion}
           />
           <StatCard
             value={500}
@@ -507,12 +569,14 @@ const About = () => {
             suffix="+"
             icon={Users}
             emoji="👥"
+            reduceMotion={!!reduceMotion}
           />
           <StatCard
             value={5}
             label="Años de experiencia"
             icon={Calendar}
             emoji="📅"
+            reduceMotion={!!reduceMotion}
           />
         </section>
 
@@ -525,7 +589,7 @@ const About = () => {
             className="glass-card rounded-3xl p-10 space-y-6 text-center relative overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 opacity-50" />
-            
+
             <div className="relative z-10">
               <div className="flex justify-center items-center gap-3 mb-6">
                 <Heart className="w-6 h-6 text-primary" />
@@ -579,7 +643,7 @@ const About = () => {
             className="glass-card rounded-3xl p-10 space-y-10 text-center relative overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 opacity-50" />
-            
+
             <div className="relative z-10">
               <div className="flex justify-center items-center gap-3 mb-8">
                 <Zap className="w-6 h-6 text-primary" />
@@ -632,9 +696,7 @@ const About = () => {
                   name={c.name}
                   count={c.count}
                   emoji={c.emoji}
-                  onClick={() =>
-                    navigate(`/catalogo?category=${encodeURIComponent(c.name)}`)
-                  }
+                  onClick={() => goToCatalogWithCategory(c.name)}
                 />
               </motion.div>
             ))}
@@ -671,7 +733,10 @@ const About = () => {
                   </div>
                   <div className="flex gap-0.5">
                     {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-primary text-primary" />
+                      <Star
+                        key={i}
+                        className="w-4 h-4 fill-primary text-primary"
+                      />
                     ))}
                   </div>
                 </div>
