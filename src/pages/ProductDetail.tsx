@@ -39,13 +39,13 @@ const ProductDetail = () => {
     <div className="min-h-screen bg-background">
       <Navbar onCartClick={() => setIsCartOpen(true)} />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-16">
-        {/* Top bar */}
-        <div className="mb-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {/* Top bar - Más visible */}
+        <div className="mb-6">
           <Button 
-            variant="ghost" 
+            variant="outline" 
             onClick={handleBack} 
-            className="gap-2 hover:bg-muted/50 transition-colors"
+            className="gap-2 border-2 hover:bg-primary hover:text-primary-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Volver al catálogo
@@ -76,11 +76,11 @@ const ProductDetail = () => {
 
         {/* Product */}
         {!isLoading && !error && product && (
-          <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-            {/* Imagen */}
+          <div className="grid gap-6 lg:grid-cols-[1.2fr,1fr] lg:gap-10 xl:gap-12">
+            {/* Imagen - Más grande */}
             <section className="space-y-4">
               <div className="glass-card rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-                <div className="relative aspect-square bg-gradient-to-br from-muted/20 to-muted/60 p-8">
+                <div className="relative aspect-square bg-gradient-to-br from-muted/20 to-muted/60 p-4 sm:p-6 md:p-10">
                   <img
                     src={product.image}
                     alt={product.name}
@@ -100,7 +100,7 @@ const ProductDetail = () => {
             </section>
 
             {/* Info */}
-            <section className="space-y-6 lg:py-4">
+            <section className="space-y-6">
               {/* Header */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -116,13 +116,13 @@ const ProductDetail = () => {
                   )}
                 </div>
 
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold leading-tight">
                   {product.name}
                 </h1>
               </div>
 
               {/* Description */}
-              <div className="glass-card rounded-xl p-6 space-y-3">
+              <div className="glass-card rounded-xl p-5 sm:p-6 space-y-3">
                 <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                   Descripción
                 </h2>
@@ -132,10 +132,10 @@ const ProductDetail = () => {
               </div>
 
               {/* Actions */}
-              <div className="space-y-3 pt-2">
+              <div className="space-y-3">
                 <Button
                   size="lg"
-                  className="w-full gap-2 text-base h-14 shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="w-full gap-2 text-base h-12 sm:h-14 shadow-lg hover:shadow-xl transition-all duration-300"
                   disabled={!product.inStock || inCart}
                   onClick={() => addToCart(product)}
                 >
@@ -168,7 +168,7 @@ const ProductDetail = () => {
                   </Button>
                   <Button
                     size="lg"
-                    variant="ghost"
+                    variant="outline"
                     className="gap-2"
                     onClick={handleBack}
                   >
