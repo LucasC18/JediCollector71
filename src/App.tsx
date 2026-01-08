@@ -1,40 +1,44 @@
-import { useEffect } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useEffect } from "react"
+import { Routes, Route, useNavigate } from "react-router-dom"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/toaster"
+import { Toaster as Sonner } from "@/components/ui/sonner"
+import { TooltipProvider } from "@/components/ui/tooltip"
 
-import Footer from "@/components/Footer";
+import ScrollToTop from "@/components/ScrollToTop"
+import Footer from "@/components/Footer"
 
-import Home from "./pages/Home";
-import Catalog from "./pages/Catalog";
-import Login from "./pages/Login";
-import Admin from "./pages/Admin";
-import NotFound from "./pages/NotFound";
-import About from "./pages/About";
-import ProductDetail from "./pages/ProductDetail";
+import Home from "./pages/Home"
+import Catalog from "./pages/Catalog"
+import Login from "./pages/Login"
+import Admin from "./pages/Admin"
+import NotFound from "./pages/NotFound"
+import About from "./pages/About"
+import ProductDetail from "./pages/ProductDetail"
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient()
 
 const App = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const redirect = params.get("redirect");
+    const params = new URLSearchParams(window.location.search)
+    const redirect = params.get("redirect")
 
     if (redirect) {
-      navigate(redirect, { replace: true });
+      navigate(redirect, { replace: true })
     }
-  }, [navigate]);
+  }, [navigate])
 
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
+
+        {/* 👇 CLAVE: resetear scroll en cada navegación */}
+        <ScrollToTop />
 
         <Routes>
           <Route path="/" element={<Home />} />
@@ -49,7 +53,7 @@ const App = () => {
         <Footer />
       </TooltipProvider>
     </QueryClientProvider>
-  );
-};
+  )
+}
 
-export default App;
+export default App

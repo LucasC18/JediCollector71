@@ -39,12 +39,16 @@ const ProductDetail = () => {
     <div className="min-h-screen bg-background">
       <Navbar onCartClick={() => setIsCartOpen(true)} />
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-8 pb-12">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-16">
         {/* Top bar */}
-        <div className="flex items-center gap-3 mb-6">
-          <Button variant="ghost" onClick={handleBack} className="gap-2">
+        <div className="mb-8">
+          <Button 
+            variant="ghost" 
+            onClick={handleBack} 
+            className="gap-2 hover:bg-muted/50 transition-colors"
+          >
             <ArrowLeft className="w-4 h-4" />
-            Volver
+            Volver al catálogo
           </Button>
         </div>
 
@@ -72,80 +76,118 @@ const ProductDetail = () => {
 
         {/* Product */}
         {!isLoading && !error && product && (
-          <div className="grid gap-10 lg:grid-cols-2">
+          <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
             {/* Imagen */}
-            <section className="glass-card rounded-xl overflow-hidden">
-              <div className="relative aspect-square bg-muted/40">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-contain p-6"
-                  loading="lazy"
-                />
+            <section className="space-y-4">
+              <div className="glass-card rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <div className="relative aspect-square bg-gradient-to-br from-muted/20 to-muted/60 p-8">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-full object-contain drop-shadow-2xl"
+                    loading="lazy"
+                  />
+                  {!product.inStock && (
+                    <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex items-center justify-center">
+                      <Badge variant="destructive" className="text-base px-4 py-2">
+                        <PackageX className="w-4 h-4 mr-2" />
+                        Sin stock
+                      </Badge>
+                    </div>
+                  )}
+                </div>
               </div>
             </section>
 
             {/* Info */}
-            <section className="space-y-5">
-              <div className="flex items-start justify-between gap-4">
-                <h1 className="text-2xl sm:text-3xl font-bold leading-tight">
+            <section className="space-y-6 lg:py-4">
+              {/* Header */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {product.category && (
+                    <Badge variant="outline" className="text-xs">
+                      {product.category}
+                    </Badge>
+                  )}
+                  {product.inStock && (
+                    <Badge className="text-xs bg-green-500 hover:bg-green-600">
+                      ✓ Disponible
+                    </Badge>
+                  )}
+                </div>
+
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
                   {product.name}
                 </h1>
-
-                {product.inStock ? (
-                  <Badge className="shrink-0">En stock</Badge>
-                ) : (
-                  <Badge variant="destructive" className="shrink-0">
-                    Sin stock
-                  </Badge>
-                )}
               </div>
 
-              {product.category && (
-                <div className="text-sm text-muted-foreground">
-                  Categoría:{" "}
-                  <span className="text-foreground">
-                    {product.category}
-                  </span>
-                </div>
-              )}
+              {/* Description */}
+              <div className="glass-card rounded-xl p-6 space-y-3">
+                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                  Descripción
+                </h2>
+                <p className="text-base leading-relaxed text-foreground/90">
+                  {product.description}
+                </p>
+              </div>
 
-              <p className="text-muted-foreground leading-relaxed">
-                {product.description}
-              </p>
-
-              <div className="pt-2 flex flex-col sm:flex-row gap-3">
+              {/* Actions */}
+              <div className="space-y-3 pt-2">
                 <Button
                   size="lg"
-                  className="gap-2"
+                  className="w-full gap-2 text-base h-14 shadow-lg hover:shadow-xl transition-all duration-300"
                   disabled={!product.inStock || inCart}
                   onClick={() => addToCart(product)}
                 >
                   {!product.inStock ? (
                     <>
-                      <PackageX className="w-4 h-4" />
-                      No disponible
+                      <PackageX className="w-5 h-5" />
+                      Producto no disponible
                     </>
                   ) : inCart ? (
                     <>
-                      <Check className="w-4 h-4" />
-                      Ya en el carrito
+                      <Check className="w-5 h-5" />
+                      ✓ Agregado al carrito
                     </>
                   ) : (
                     <>
-                      <Plus className="w-4 h-4" />
+                      <Plus className="w-5 h-5" />
                       Agregar a consulta
                     </>
                   )}
                 </Button>
 
-                <Button
-                  size="lg"
-                  variant="outline"
-                  onClick={() => setIsCartOpen(true)}
-                >
-                  Ver carrito
-                </Button>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => setIsCartOpen(true)}
+                  >
+                    Ver carrito
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="ghost"
+                    className="gap-2"
+                    onClick={handleBack}
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Volver
+                  </Button>
+                </div>
+              </div>
+
+              {/* Info adicional */}
+              <div className="pt-4 border-t space-y-2 text-sm text-muted-foreground">
+                <p className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-primary/60"></span>
+                  Consulta sin compromiso
+                </p>
+                <p className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-primary/60"></span>
+                  Asesoramiento personalizado
+                </p>
               </div>
             </section>
           </div>
