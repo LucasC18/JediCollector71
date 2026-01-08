@@ -27,8 +27,14 @@ const ProductDetailModal = memo(({ product, open, onClose }: Props) => {
   const [showFullImage, setShowFullImage] = useState(false)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
 
-  /* ------------------ UX / Accesibilidad ------------------ */
+  /* ------------------ FIX CRÍTICO: reset al cambiar producto ------------------ */
+  useEffect(() => {
+    setShowFullImage(false)
+    setImageLoaded(false)
+    setImageError(false)
+  }, [product?.id])
 
+  /* ------------------ Scroll lock SOLO para lightbox ------------------ */
   useEffect(() => {
     document.body.style.overflow = showFullImage ? "hidden" : ""
     return () => {
@@ -36,6 +42,7 @@ const ProductDetailModal = memo(({ product, open, onClose }: Props) => {
     }
   }, [showFullImage])
 
+  /* ------------------ Escape para cerrar lightbox ------------------ */
   useEffect(() => {
     const onEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape" && showFullImage) {
@@ -46,19 +53,13 @@ const ProductDetailModal = memo(({ product, open, onClose }: Props) => {
     return () => window.removeEventListener("keydown", onEsc)
   }, [showFullImage])
 
+  /* ------------------ NO cerrar Dialog si el lightbox está abierto ------------------ */
   const handleOpenChange = useCallback(
     (newOpen: boolean) => {
-      if (!newOpen) {
-        onClose()
-        setTimeout(() => {
-          setImageLoaded(false)
-          setImageError(false)
-          setShowFullImage(false)
-          setIsAddingToCart(false)
-        }, 200)
-      }
+      if (!newOpen && showFullImage) return
+      if (!newOpen) onClose()
     },
-    [onClose]
+    [onClose, showFullImage]
   )
 
   const handleAddToCart = useCallback(async () => {
@@ -90,7 +91,7 @@ const ProductDetailModal = memo(({ product, open, onClose }: Props) => {
         >
           <DialogTitle className="sr-only">{product.name}</DialogTitle>
 
-          {/* Cerrar */}
+          {/* Cerrar modal */}
           <button
             onClick={onClose}
             className="absolute top-3 right-3 z-50 bg-black/70 rounded-full p-2 text-white hover:bg-black"
@@ -169,7 +170,7 @@ const ProductDetailModal = memo(({ product, open, onClose }: Props) => {
                 </p>
               </div>
 
-              {/* BOTÓN – STICKY EN MOBILE */}
+              {/* BOTÓN STICKY MOBILE */}
               <div className="
                 border-t border-white/10 p-5
                 sticky bottom-0 z-20
@@ -203,14 +204,22 @@ const ProductDetailModal = memo(({ product, open, onClose }: Props) => {
         </DialogContent>
       </Dialog>
 
-      {/* Lightbox */}
+      {/* LIGHTBOX AISLADO (NO TOCA EL DIALOG) */}
       {showFullImage && (
         <div
           className="fixed inset-0 z-[9999] bg-black/95 flex items-center justify-center p-4"
-          onClick={() => setShowFullImage(false)}
+          onClick={(e) => {
+            e.stopPropagation()
+            setShowFullImage(false)
+          }}
         >
           <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setShowFullImage(false)
+            }}
             className="absolute top-4 right-4 bg-black/70 p-3 rounded-full text-white"
+            aria-label="Cerrar imagen completa"
           >
             <X className="w-6 h-6" />
           </button>
