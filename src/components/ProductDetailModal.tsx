@@ -16,6 +16,7 @@ const ProductDetailModal = memo(({ product, open, onClose }: Props) => {
   const { addToCart, isInCart } = useCart()
   const [imageLoaded, setImageLoaded] = useState(false)
   const [imageError, setImageError] = useState(false)
+  const [showFullImage, setShowFullImage] = useState(false)
 
   const handleOpenChange = useCallback((newOpen: boolean) => {
     if (!newOpen) {
@@ -23,6 +24,7 @@ const ProductDetailModal = memo(({ product, open, onClose }: Props) => {
       setTimeout(() => {
         setImageLoaded(false)
         setImageError(false)
+        setShowFullImage(false)
       }, 300)
     }
   }, [onClose])
@@ -39,6 +41,12 @@ const ProductDetailModal = memo(({ product, open, onClose }: Props) => {
     setImageError(true)
     setImageLoaded(true)
   }, [])
+
+  const toggleFullImage = useCallback(() => {
+    if (!imageError && imageLoaded) {
+      setShowFullImage(prev => !prev)
+    }
+  }, [imageError, imageLoaded])
 
   if (!product) return null
 
@@ -84,12 +92,25 @@ const ProductDetailModal = memo(({ product, open, onClose }: Props) => {
         <div className="flex flex-col lg:grid lg:grid-cols-2 h-full overflow-hidden">
 
           {/* Imagen - compacta en móviles, más grande en desktop */}
-          <div className="
-            relative w-full 
-            h-[35vh] sm:h-[40vh] lg:h-full
-            flex-shrink-0
-            overflow-hidden bg-neutral-900
-          ">
+          <div 
+            className="
+              relative w-full 
+              h-[35vh] sm:h-[40vh] lg:h-full
+              flex-shrink-0
+              overflow-hidden bg-neutral-900
+              cursor-pointer group
+            "
+            onClick={toggleFullImage}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                toggleFullImage()
+              }
+            }}
+            aria-label="Ver imagen en pantalla completa"
+          >
             
             {/* Skeleton loader */}
             {!imageLoaded && !imageError && (
@@ -124,7 +145,18 @@ const ProductDetailModal = memo(({ product, open, onClose }: Props) => {
 
             {/* Gradiente */}
             {imageLoaded && !imageError && (
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+              <>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+                
+                {/* Indicador de zoom en hover */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                  <div className="bg-black/70 backdrop-blur-sm rounded-full p-4">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                    </svg>
+                  </div>
+                </div>
+              </>
             )}
           </div>
 
@@ -251,6 +283,33 @@ const ProductDetailModal = memo(({ product, open, onClose }: Props) => {
 
           </div>
         </div>
+
+        {/* Lightbox - Imagen en pantalla completa */}
+        {showFullImage && !imageError && (
+          <div
+            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+            onClick={toggleFullImage}
+            role="dialog"
+            aria-label="Imagen en pantalla completa"
+          >
+            {/* Botón cerrar */}
+            <button
+              onClick={toggleFullImage}
+              className="absolute top-4 right-4 z-10 bg-black/70 backdrop-blur-sm rounded-full p-3 text-white/90 hover:text-white hover:bg-black/90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              aria-label="Cerrar imagen completa"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            {/* Imagen completa */}
+            <img
+              src={product.image}
+              alt={product.name}
+              className="max-w-full max-h-full object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   )
