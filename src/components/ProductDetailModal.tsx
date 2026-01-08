@@ -114,15 +114,23 @@ const ProductDetailModal = memo(({ product, open, onClose }: Props) => {
                   onClick={() => setShowFullImage(true)}
                   className="
                     absolute bottom-4 left-1/2 -translate-x-1/2
+                    group
                     flex items-center gap-2
-                    bg-black/80 backdrop-blur-sm
-                    text-white px-4 py-2 rounded-full
-                    text-sm font-semibold
-                    hover:bg-black transition
+                    bg-gradient-to-r from-purple-600 to-blue-600
+                    hover:from-purple-500 hover:to-blue-500
+                    text-white px-5 py-2.5 rounded-full
+                    text-sm font-bold
+                    shadow-lg shadow-purple-500/30
+                    hover:shadow-xl hover:shadow-purple-500/50
+                    transition-all duration-300
+                    hover:scale-105
+                    active:scale-95
+                    border border-white/20
                   "
                 >
-                  <Expand className="w-4 h-4" />
+                  <Expand className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" />
                   Ver imagen completa
+                  <div className="absolute inset-0 rounded-full bg-white/20 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-300" />
                 </button>
               )}
             </div>
