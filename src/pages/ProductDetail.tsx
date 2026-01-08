@@ -9,13 +9,14 @@ import { useCart } from "@/context/CartContext"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, ArrowLeft, Plus, Check, PackageX } from "lucide-react"
+import { Loader2, ArrowLeft, Plus, Check, PackageX, Maximize2, X } from "lucide-react"
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
   const [isCartOpen, setIsCartOpen] = useState(false)
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false)
 
   const { products, isLoading, error } = useProducts()
   const { addToCart, isInCart } = useCart()
@@ -45,7 +46,7 @@ const ProductDetail = () => {
           <Button 
             variant="outline" 
             onClick={handleBack} 
-            className="gap-2 border-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+            className="gap-2 border-2 border-primary/50 hover:border-primary hover:bg-primary hover:text-primary-foreground transition-all hover:shadow-[0_0_20px_rgba(var(--primary),0.5)]"
           >
             <ArrowLeft className="w-4 h-4" />
             Volver al catálogo
@@ -79,22 +80,32 @@ const ProductDetail = () => {
           <div className="grid gap-6 lg:grid-cols-[1.2fr,1fr] lg:gap-10 xl:gap-12">
             {/* Imagen - Más grande */}
             <section className="space-y-4">
-              <div className="glass-card rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-                <div className="relative aspect-square bg-gradient-to-br from-muted/20 to-muted/60 p-4 sm:p-6 md:p-10">
+              <div className="glass-card rounded-2xl overflow-hidden shadow-[0_0_30px_rgba(var(--primary),0.3)] hover:shadow-[0_0_50px_rgba(var(--primary),0.5)] transition-all duration-300 border border-primary/20">
+                <div className="relative aspect-square bg-gradient-to-br from-primary/5 via-muted/20 to-primary/10 p-4 sm:p-6 md:p-10">
                   <img
                     src={product.image}
                     alt={product.name}
-                    className="w-full h-full object-contain drop-shadow-2xl"
+                    className="w-full h-full object-contain drop-shadow-[0_0_30px_rgba(var(--primary),0.4)]"
                     loading="lazy"
                   />
                   {!product.inStock && (
                     <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex items-center justify-center">
-                      <Badge variant="destructive" className="text-base px-4 py-2">
+                      <Badge variant="destructive" className="text-base px-4 py-2 shadow-[0_0_20px_rgba(239,68,68,0.6)]">
                         <PackageX className="w-4 h-4 mr-2" />
                         Sin stock
                       </Badge>
                     </div>
                   )}
+                  
+                  {/* Botón para ver imagen completa */}
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="absolute top-4 right-4 shadow-lg hover:shadow-[0_0_20px_rgba(var(--primary),0.6)] transition-all border border-primary/30"
+                    onClick={() => setIsImageModalOpen(true)}
+                  >
+                    <Maximize2 className="w-4 h-4" />
+                  </Button>
                 </div>
               </div>
             </section>
@@ -105,25 +116,25 @@ const ProductDetail = () => {
               <div className="space-y-3">
                 <div className="flex items-center gap-2 flex-wrap">
                   {product.category && (
-                    <Badge variant="outline" className="text-xs">
+                    <Badge variant="outline" className="text-xs border-primary/50 shadow-[0_0_10px_rgba(var(--primary),0.3)]">
                       {product.category}
                     </Badge>
                   )}
                   {product.inStock && (
-                    <Badge className="text-xs bg-green-500 hover:bg-green-600">
+                    <Badge className="text-xs bg-green-500 hover:bg-green-600 shadow-[0_0_15px_rgba(34,197,94,0.5)]">
                       ✓ Disponible
                     </Badge>
                   )}
                 </div>
 
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold leading-tight">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold leading-tight bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent drop-shadow-[0_0_10px_rgba(var(--primary),0.3)]">
                   {product.name}
                 </h1>
               </div>
 
               {/* Description */}
-              <div className="glass-card rounded-xl p-5 sm:p-6 space-y-3">
-                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+              <div className="glass-card rounded-xl p-5 sm:p-6 space-y-3 border border-primary/20 shadow-[0_0_20px_rgba(var(--primary),0.2)]">
+                <h2 className="text-sm font-semibold text-primary uppercase tracking-wider">
                   Descripción
                 </h2>
                 <p className="text-base leading-relaxed text-foreground/90">
@@ -135,7 +146,7 @@ const ProductDetail = () => {
               <div className="space-y-3">
                 <Button
                   size="lg"
-                  className="w-full gap-2 text-base h-12 sm:h-14 shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="w-full gap-2 text-base h-12 sm:h-14 shadow-[0_0_30px_rgba(var(--primary),0.4)] hover:shadow-[0_0_50px_rgba(var(--primary),0.7)] transition-all duration-300"
                   disabled={!product.inStock || inCart}
                   onClick={() => addToCart(product)}
                 >
@@ -161,7 +172,7 @@ const ProductDetail = () => {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="gap-2"
+                    className="gap-2 border-primary/50 hover:border-primary hover:shadow-[0_0_20px_rgba(var(--primary),0.4)] transition-all"
                     onClick={() => setIsCartOpen(true)}
                   >
                     Ver carrito
@@ -169,7 +180,7 @@ const ProductDetail = () => {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="gap-2"
+                    className="gap-2 border-primary/50 hover:border-primary hover:shadow-[0_0_20px_rgba(var(--primary),0.4)] transition-all"
                     onClick={handleBack}
                   >
                     <ArrowLeft className="w-4 h-4" />
@@ -179,13 +190,13 @@ const ProductDetail = () => {
               </div>
 
               {/* Info adicional */}
-              <div className="pt-4 border-t space-y-2 text-sm text-muted-foreground">
+              <div className="pt-4 border-t border-primary/20 space-y-2 text-sm text-muted-foreground">
                 <p className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-primary/60"></span>
+                  <span className="w-2 h-2 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--primary),0.8)]"></span>
                   Consulta sin compromiso
                 </p>
                 <p className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-primary/60"></span>
+                  <span className="w-2 h-2 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--primary),0.8)]"></span>
                   Asesoramiento personalizado
                 </p>
               </div>
@@ -193,6 +204,32 @@ const ProductDetail = () => {
           </div>
         )}
       </main>
+
+      {/* Modal de imagen completa */}
+      {isImageModalOpen && product && (
+        <div 
+          className="fixed inset-0 z-50 bg-background/95 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300"
+          onClick={() => setIsImageModalOpen(false)}
+        >
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-4 right-4 z-10 hover:bg-primary/20 border border-primary/50 shadow-[0_0_20px_rgba(var(--primary),0.5)]"
+            onClick={() => setIsImageModalOpen(false)}
+          >
+            <X className="w-6 h-6" />
+          </Button>
+          
+          <div className="relative max-w-6xl w-full max-h-[90vh] glass-card rounded-2xl overflow-hidden border-2 border-primary/30 shadow-[0_0_60px_rgba(var(--primary),0.6)]">
+            <img
+              src={product.image}
+              alt={product.name}
+              className="w-full h-full object-contain p-8"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
 
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </div>
