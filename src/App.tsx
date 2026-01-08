@@ -37,20 +37,27 @@ const App = () => {
         <Toaster />
         <Sonner />
 
-        {/* 👇 CLAVE: resetear scroll en cada navegación */}
+        {/* Reset de scroll en navegación */}
         <ScrollToTop />
 
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/catalogo" element={<Catalog />} />
-          <Route path="/producto/:id" element={<ProductDetail />} />
-          <Route path="/nosotros" element={<About />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        {/* 👇 LAYOUT GLOBAL CORRECTO */}
+        <div className="min-h-screen flex flex-col bg-background">
+          {/* Contenido principal */}
+          <div className="flex-1">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/catalogo" element={<Catalog />} />
+              <Route path="/producto/:id" element={<ProductDetail />} />
+              <Route path="/nosotros" element={<About />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
 
-        <Footer />
+          {/* Footer siempre abajo */}
+          <Footer />
+        </div>
       </TooltipProvider>
     </QueryClientProvider>
   )
