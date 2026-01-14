@@ -4,22 +4,49 @@ import { apiFetch } from "@/config/api"
 
 /* =======================
    Backend DTO
-   ======================= */
+======================= */
 interface ProductApiDTO {
   id: string
   name: string
   image?: string | null
   imageUrl?: string | null
-  category?: string | null
-  categoryName?: string | null
+
   description?: string | null
   inStock: boolean
-  collection?: string
+
+  category?: string | null
+  categoryId?: string | null
+  categorySlug?: string | null
+
+  collection?: string | null
+  collectionId?: string | null
+  collectionSlug?: string | null
 }
 
 /* =======================
+   Mapper backend → frontend
+======================= */
+function mapProductFromApi(p: ProductApiDTO): Product {
+  return {
+    id: p.id,
+    name: p.name,
+    image: p.image ?? p.imageUrl ?? "",
+    description: p.description ?? "",
+    inStock: p.inStock,
+
+    // usamos SLUG para filtros (URL safe)
+    // si no existe slug, usamos el nombre
+    category: p.categorySlug ?? p.category ?? null,
+
+    // idem para colección
+    collection: p.collectionSlug ?? p.collection ?? "simil",
+  }
+}
+
+
+/* =======================
    Context types
-   ======================= */
+======================= */
 interface ProductContextType {
   products: Product[]
   isLoading: boolean
@@ -30,27 +57,8 @@ interface ProductContextType {
 const ProductContext = createContext<ProductContextType | undefined>(undefined)
 
 /* =======================
-   Mapper backend → frontend
-   ======================= */
-function mapProductFromApi(p: ProductApiDTO): Product {
-  return {
-    id: p.id,
-    name: p.name,
-    image: p.image ?? p.imageUrl ?? "",
-    category: p.category ?? p.categoryName ?? "Sin categoría",
-    description: p.description ?? "",
-    inStock: p.inStock,
-
-    // 🚨 FIX CRÍTICO:
-    // Antes era "Figuras" y rompía los filtros.
-    // Ahora coincide con lo que usa el backend y el catálogo.
-    collection: p.collection || "Personajes",
-  }
-}
-
-/* =======================
    Provider
-   ======================= */
+======================= */
 export const ProductProvider = ({ children }: { children: ReactNode }) => {
   const [products, setProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -101,7 +109,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
 
 /* =======================
    Hook
-   ======================= */
+======================= */
 export const useProducts = () => {
   const ctx = useContext(ProductContext)
   if (!ctx) {

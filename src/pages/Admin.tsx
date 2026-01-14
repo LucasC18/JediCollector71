@@ -60,6 +60,12 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 
+/* ======================= COLLECTIONS ======================= */
+const COLLECTIONS = [
+  { slug: "simil", name: "SIMIL (tipo Lego)" },
+  { slug: "hasbro-3-75", name: "HASBRO 3.75" }
+];
+
 /* ======================= TYPES ======================= */
 interface Category {
   id: string;
@@ -76,7 +82,7 @@ interface ProductApiDTO {
   description?: string | null;
   inStock: boolean;
   stockQty?: number | null;
-  collection?: string; // ⬅️ NUEVO
+  collection?: string;
 }
 
 interface ApiError {
@@ -96,7 +102,7 @@ interface ProductFormState {
   imagePreview: string;
   inStock: boolean;
   stockQty: number;
-  collection: string; // ⬅️ NUEVO
+  collection: string;
 }
 
 const EMPTY_FORM: ProductFormState = {
@@ -107,7 +113,7 @@ const EMPTY_FORM: ProductFormState = {
   imagePreview: "",
   inStock: true,
   stockQty: 0,
-  collection: "Personajes", // ⬅️ default
+  collection: "simil",
 };
 
 function mapAdminProducts(
@@ -142,7 +148,7 @@ function mapAdminProducts(
       description: p.description ?? "",
       inStock: p.inStock,
       stockQty: p.stockQty ?? 0,
-      collection: p.collection ?? "Personajes", // ⬅️ NUEVO
+      collection: p.collection ?? "simil",
     };
   });
 }
@@ -192,7 +198,7 @@ const Admin = () => {
 
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [activeCollection, setActiveCollection] = useState<string>("Bloques"); // ⬅️ NUEVO
+  const [activeCollection, setActiveCollection] = useState<string>("simil");
 
   const totalProducts = products.length;
   const inStockProducts = products.filter((p) => p.inStock).length;
@@ -212,7 +218,7 @@ const Admin = () => {
       const matchesCategory =
         categoryFilter === "all" || p.category === categoryFilter;
 
-      const matchesCollection = p.collection === activeCollection; // ⬅️ NUEVO
+      const matchesCollection = p.collection === activeCollection;
 
       return matchesSearch && matchesCategory && matchesCollection;
     });
@@ -245,7 +251,7 @@ const Admin = () => {
     setEditing(null);
     setForm({
       ...EMPTY_FORM,
-      collection: activeCollection, // ⬅️ hereda la colección actual
+      collection: activeCollection,
     });
     setDialogOpen(true);
   };
@@ -263,7 +269,7 @@ const Admin = () => {
       imagePreview: p.image,
       inStock: p.inStock,
       stockQty: p.stockQty ?? 0,
-      collection: p.collection ?? "Bloques", // ⬅️ NUEVO
+      collection: p.collection ?? "simil",
     });
     setDialogOpen(true);
   };
@@ -357,7 +363,7 @@ const Admin = () => {
               categoryId: form.categoryId,
               inStock: form.inStock,
               stockQty: form.stockQty,
-              collection: form.collection, // ⬅️ NUEVO
+              collection: form.collection,
             }),
           }
         );
@@ -372,7 +378,7 @@ const Admin = () => {
             categoryId: form.categoryId,
             inStock: form.inStock,
             stockQty: form.stockQty,
-            collection: form.collection, // ⬅️ NUEVO
+            collection: form.collection,
           }),
         });
         productId = created.id;
@@ -491,22 +497,21 @@ const Admin = () => {
           </Button>
         </div>
 
-        {/* ⬅️ NUEVO: Selector de colecciones */}
         <div className="flex justify-center gap-3">
-          {["Bloques", "Personajes"].map((c) => (
+          {COLLECTIONS.map((c) => (
             <button
-              key={c}
+              key={c.slug}
               onClick={() => {
-                setActiveCollection(c);
-                setForm(f => ({ ...f, collection: c }));
+                setActiveCollection(c.slug);
+                setForm(f => ({ ...f, collection: c.slug }));
               }}
               className={`px-6 py-3 rounded-xl border text-sm font-medium transition-all ${
-                activeCollection === c
+                activeCollection === c.slug
                   ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/30 shadow-lg shadow-cyan-500/20"
                   : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10"
               }`}
             >
-              {c}
+              {c.name}
             </button>
           ))}
         </div>
@@ -750,8 +755,11 @@ const Admin = () => {
                     <SelectValue placeholder="Seleccionar colección" />
                   </SelectTrigger>
                   <SelectContent className="bg-slate-900 border-white/10">
-                    <SelectItem value="Bloques" className="text-white">Bloques</SelectItem>
-                    <SelectItem value="Personajes" className="text-white">Personajes</SelectItem>
+                    {COLLECTIONS.map(c => (
+                      <SelectItem key={c.slug} value={c.slug} className="text-white">
+                        {c.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

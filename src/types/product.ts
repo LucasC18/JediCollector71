@@ -1,19 +1,24 @@
 export interface Product {
-  id: string;
-  name: string;
-  category: string | null;
-  categorySlug?: string | null;
-  description: string;
-  inStock: boolean;
-  image: string;
+  id: string
+  name: string
 
-  // NUEVO
-  collection: string;
+  // Usado para filtrar (slug: batman, marvel, star-wars, etc)
+  category: string | null
+
+  // Opcional si en algún lado querés mostrar el label real
+  categorySlug?: string | null
+
+  description: string
+  inStock: boolean
+  image: string
+
+  // Usado para filtrar (slug: simil, hasbro-3-75)
+  collection: string
 
   // Solo admin
-  stockQty?: number | null;
+  stockQty?: number | null
 }
 
 export interface CartItem extends Product {
-  quantity: number;
+  quantity: number
 }
