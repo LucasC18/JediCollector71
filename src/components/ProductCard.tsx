@@ -1,12 +1,6 @@
 import * as React from "react"
 import { motion } from "framer-motion"
-import {
-  Plus,
-  Check,
-  Package,
-  PackageX,
-  CheckCircle2,
-} from "lucide-react"
+import { Plus, Check, Package, PackageX, CheckCircle2, ImageOff } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
 import { Product } from "@/types/product"
@@ -66,13 +60,23 @@ const ProductCard = React.forwardRef<HTMLElement, ProductCardProps>(
         className="group relative glass-card rounded-lg sm:rounded-xl overflow-hidden hover-glow cursor-pointer flex flex-col h-full"
       >
         {/* IMAGE */}
-        <div className="relative aspect-square overflow-hidden">
-          <motion.img
-            src={product.image}
-            alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            loading="lazy"
-          />
+        <div className="relative aspect-square overflow-hidden bg-black/20">
+          {product.image ? (
+            <motion.img
+              src={product.image}
+              alt={product.name}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              loading="lazy"
+              onError={(e) => {
+                ;(e.currentTarget as HTMLImageElement).src = ""
+              }}
+            />
+          ) : (
+            <div className="flex items-center justify-center w-full h-full text-muted-foreground">
+              <ImageOff className="w-10 h-10" />
+            </div>
+          )}
+
           <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/20 to-transparent" />
         </div>
 
@@ -109,12 +113,14 @@ const ProductCard = React.forwardRef<HTMLElement, ProductCardProps>(
           </div>
 
           {/* CATEGORY */}
-          <Badge
-            variant="outline"
-            className="w-fit text-[10px] sm:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 bg-secondary/20 text-secondary border-secondary/50"
-          >
-            {product.category}
-          </Badge>
+          {product.category && (
+            <Badge
+              variant="outline"
+              className="w-fit text-[10px] sm:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 bg-secondary/20 text-secondary border-secondary/50"
+            >
+              {product.category}
+            </Badge>
+          )}
 
           {/* DESCRIPTION */}
           {product.description && (

@@ -13,7 +13,11 @@ export async function apiFetch<T>(
     throw new Error("VITE_API_BASE_URL no está configurado")
   }
 
-  const url = `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`
+  // ⚠️ Vercel requiere HTTPS
+  const base =
+    API_BASE_URL.startsWith("http") ? API_BASE_URL : `https://${API_BASE_URL}`
+
+  const url = `${base}${path.startsWith("/") ? path : `/${path}`}`
 
   const headers = new Headers(options.headers)
 
@@ -33,8 +37,8 @@ export async function apiFetch<T>(
   const res = await fetch(url, {
     ...options,
     headers,
-    cache: "no-store",              // 🔥 evita cache fantasma en Vercel
-    credentials: "omit",            // 🔥 evita CORS raro
+    cache: "no-store",
+    credentials: "omit",
   })
 
   if (!res.ok) {
@@ -43,19 +47,18 @@ export async function apiFetch<T>(
     try {
       const data = await res.json()
       message = data?.error ?? data?.message ?? message
-    } catch {
-      // no-op
+    } catch (err) {
+      // backend puede devolver texto plano o HTML (Vercel / 404)
     }
 
     throw new Error(message)
   }
 
-  // No Content
   if (res.status === 204) {
     return undefined as T
   }
 
-  // Evitar crash si backend responde vacío
+  // 🔥 Vercel a veces responde vacío
   const text = await res.text()
   if (!text) {
     return undefined as T

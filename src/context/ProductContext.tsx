@@ -11,8 +11,10 @@ interface ProductApiDTO {
   image?: string | null
   description?: string | null
   inStock: boolean
-  category?: string | null   // slug ya viene listo
-  collection?: string | null // slug ya viene listo
+
+  // Slugs ya vienen listos desde el backend
+  category?: string | null
+  collection?: string | null
 }
 
 /* =======================
@@ -25,6 +27,8 @@ function mapProductFromApi(p: ProductApiDTO): Product {
     image: p.image ?? "",
     description: p.description ?? "",
     inStock: p.inStock,
+
+    // Ya vienen como slug, se usan directo
     category: p.category ?? null,
     collection: p.collection ?? "",
   }
@@ -55,7 +59,8 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     setError(null)
 
     try {
-      const res = await apiFetch<ProductApiDTO[]>("/v1/products")
+      // 🔥 Pedimos más de 50 productos
+      const res = await apiFetch<ProductApiDTO[]>("/v1/products?limit=1000")
 
       if (!Array.isArray(res)) {
         throw new Error("Formato inválido del backend")

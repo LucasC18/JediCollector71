@@ -1,24 +1,26 @@
-import { motion } from "framer-motion";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import { motion } from "framer-motion"
+import { Badge } from "@/components/ui/badge"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
 
 interface FiltersProps {
-  categories: string[];
-  selectedCategories: string[];
-  onCategoryToggle: (category: string) => void;
-  showOnlyInStock: boolean;
-  onStockFilterChange: (value: boolean) => void;
+  categories: string[]
+  selectedCategories: string[]
+  onCategoryToggle: (category: string) => void
+  onClearCategories: () => void       // 🔥 NUEVO
+  showOnlyInStock: boolean
+  onStockFilterChange: (value: boolean) => void
 }
 
 const Filters = ({
   categories,
   selectedCategories,
   onCategoryToggle,
+  onClearCategories,
   showOnlyInStock,
   onStockFilterChange,
 }: FiltersProps) => {
-  const allSelected = selectedCategories.length === 0;
+  const allSelected = selectedCategories.length === 0
 
   return (
     <motion.div
@@ -39,11 +41,7 @@ const Filters = ({
             role="button"
             aria-pressed={allSelected}
             tabIndex={0}
-            onClick={() => {
-              if (!allSelected) {
-                selectedCategories.forEach(onCategoryToggle);
-              }
-            }}
+            onClick={onClearCategories}
             className={`cursor-pointer transition-all duration-300 px-4 py-2 text-sm font-medium ${
               allSelected
                 ? "bg-primary text-primary-foreground neon-glow"
@@ -54,7 +52,7 @@ const Filters = ({
           </Badge>
 
           {categories.map((category, index) => {
-            const isSelected = selectedCategories.includes(category);
+            const isSelected = selectedCategories.includes(category)
 
             return (
               <motion.div
@@ -77,7 +75,7 @@ const Filters = ({
                   {category}
                 </Badge>
               </motion.div>
-            );
+            )
           })}
         </div>
       </div>
@@ -90,15 +88,12 @@ const Filters = ({
           onCheckedChange={onStockFilterChange}
           className="data-[state=checked]:bg-neon-green"
         />
-        <Label
-          htmlFor="stock-filter"
-          className="text-sm font-medium cursor-pointer"
-        >
+        <Label htmlFor="stock-filter" className="text-sm font-medium cursor-pointer">
           Mostrar solo disponibles
         </Label>
       </div>
     </motion.div>
-  );
-};
+  )
+}
 
-export default Filters;
+export default Filters

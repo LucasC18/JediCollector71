@@ -8,13 +8,27 @@ import { Button } from "@/components/ui/button"
 interface ProductGridProps {
   products: Product[]
   onClearFilters?: () => void
+  isLoading?: boolean           // 🔥 NUEVO
 }
 
-const ProductGrid = ({ products, onClearFilters }: ProductGridProps) => {
+const ProductGrid = ({ products, onClearFilters, isLoading }: ProductGridProps) => {
+  /* ===============================
+     LOADING STATE
+  =============================== */
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div key={i} className="h-64 bg-card/50 animate-pulse rounded-lg" />
+        ))}
+      </div>
+    )
+  }
+
   /* ===============================
      EMPTY STATE
   =============================== */
-  if (products.length === 0) {
+  if (!products || products.length === 0) {
     return (
       <motion.div
         initial={{ opacity: 0 }}
@@ -41,7 +55,7 @@ const ProductGrid = ({ products, onClearFilters }: ProductGridProps) => {
   }
 
   /* ===============================
-     GRID FINAL (SIN MODAL)
+     GRID FINAL
   =============================== */
   return (
     <div
