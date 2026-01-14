@@ -81,10 +81,8 @@ interface ProductApiDTO {
   description: string
   inStock: boolean
   stockQty: number | null
-
   category: string | null
   categorySlug: string | null
-
   collection: string | null
   collectionSlug: string | null
 }
@@ -186,7 +184,7 @@ const Admin = () => {
         setCategories(cats)
         setCollections(cols)
         setProducts(mapAdminProducts(items))
-      } catch (err) {
+      } catch {
         toast({
           title: "Error",
           description: "No se pudieron cargar los datos",
@@ -196,7 +194,7 @@ const Admin = () => {
     }
 
     load()
-  }, [isAuthenticated, toast])
+  }, [isAuthenticated])
 
   /* ======================= FILTER ======================= */
   const filteredProducts = useMemo(() => {
@@ -206,9 +204,7 @@ const Admin = () => {
       const matchesSearch =
         q === "" ||
         p.name.toLowerCase().includes(q) ||
-        p.description.toLowerCase().includes(q) ||
-        (p.category ?? "").toLowerCase().includes(q) ||
-        (p.collection ?? "").toLowerCase().includes(q)
+        p.description.toLowerCase().includes(q)
 
       const matchesCategory =
         categoryFilter === "all" || p.categorySlug === categoryFilter
@@ -220,7 +216,7 @@ const Admin = () => {
     })
   }, [products, search, categoryFilter, collectionFilter])
 
-  /* ======================= ACTIONS ======================= */
+  /* ======================= CRUD ======================= */
 
   const openCreate = () => {
     setEditing(null)
@@ -301,6 +297,7 @@ const Admin = () => {
       setProducts(mapAdminProducts(items))
 
       setDialogOpen(false)
+      toast({ title: "Guardado", description: "Producto guardado correctamente" })
     } catch {
       toast({ title: "Error", description: "No se pudo guardar", variant: "destructive" })
     }
@@ -308,7 +305,103 @@ const Admin = () => {
 
   if (!isAuthenticated) return <Navigate to="/login" replace />
 
-  return <div className="p-10 text-white">Admin listo y alineado al backend</div>
+  return (
+    <div className="p-10 text-white">
+      <h1 className="text-3xl font-bold mb-6">Panel Admin</h1>
+
+      <Button onClick={openCreate} className="mb-6">
+        <Plus className="mr-2" /> Nuevo producto
+      </Button>
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Nombre</TableHead>
+            <TableHead>Categoría</TableHead>
+            <TableHead>Colección</TableHead>
+            <TableHead>Stock</TableHead>
+            <TableHead></TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filteredProducts.map((p) => (
+            <TableRow key={p.id}>
+              <TableCell>{p.name}</TableCell>
+              <TableCell>{p.category}</TableCell>
+              <TableCell>{p.collection}</TableCell>
+              <TableCell>{p.inStock ? "Sí" : "No"}</TableCell>
+              <TableCell>
+                <Button size="sm" onClick={() => openEdit(p)}>
+                  <Pencil />
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editing ? "Editar" : "Nuevo"}</DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              placeholder="Nombre"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+            />
+
+            <Textarea
+              placeholder="Descripción"
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+            />
+
+            <Select
+              value={form.categoryId}
+              onValueChange={(v) => setForm({ ...form, categoryId: v })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Categoría" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={form.collectionId}
+              onValueChange={(v) => setForm({ ...form, collectionId: v })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Colección" />
+              </SelectTrigger>
+              <SelectContent>
+                {collections.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <ImageDropzone
+              preview={form.imagePreview}
+              onImageSelect={(file) => setForm({ ...form, imageFile: file })}
+            />
+
+            <Button type="submit">Guardar</Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
 }
 
 export default Admin

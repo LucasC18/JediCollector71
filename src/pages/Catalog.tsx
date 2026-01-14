@@ -23,11 +23,6 @@ type Collection = {
   slug: string
 }
 
-type QueryParams = {
-  category?: string
-  collection?: string
-}
-
 const Catalog = () => {
   const [products, setProducts] = useState<Product[]>([])
   const [total, setTotal] = useState(0)
@@ -50,7 +45,9 @@ const Catalog = () => {
   const categoryFromUrl = searchParams.get("category")
   const collectionFromUrl = searchParams.get("collection")
 
-  /* Debounce */
+  /* =======================
+     Debounce search
+  ======================= */
   useEffect(() => {
     const id = setTimeout(() => {
       setDebouncedQuery(searchQuery)
@@ -59,20 +56,31 @@ const Catalog = () => {
     return () => clearTimeout(id)
   }, [searchQuery])
 
-  /* Cargar categorías y colecciones */
+  /* =======================
+     Load categories & collections
+  ======================= */
   useEffect(() => {
-    apiFetch<Category[]>("/v1/categories").then(setCategories).catch(() => setCategories([]))
-    apiFetch<Collection[]>("/v1/collections").then(setCollections).catch(() => setCollections([]))
+    apiFetch<Category[]>("/v1/categories")
+      .then(setCategories)
+      .catch(() => setCategories([]))
+
+    apiFetch<Collection[]>("/v1/collections")
+      .then(setCollections)
+      .catch(() => setCollections([]))
   }, [])
 
-  /* Sync URL → state */
+  /* =======================
+     Sync URL → state
+  ======================= */
   useEffect(() => {
     setSelectedCategory(categoryFromUrl)
     setSelectedCollection(collectionFromUrl)
     setCurrentPage(1)
   }, [categoryFromUrl, collectionFromUrl])
 
-  /* Fetch productos */
+  /* =======================
+     Fetch products
+  ======================= */
   useEffect(() => {
     const load = async () => {
       setIsLoading(true)
@@ -91,6 +99,7 @@ const Catalog = () => {
         const res = await apiFetch<{ items: Product[]; total: number }>(
           `/v1/products?${params.toString()}`
         )
+
         setProducts(res.items)
         setTotal(res.total)
       } catch {
@@ -104,15 +113,10 @@ const Catalog = () => {
     load()
   }, [selectedCategory, selectedCollection, debouncedQuery, showOnlyInStock, currentPage])
 
-  /* Utils */
-  const buildQuery = (category: string | null, collection: string | null): QueryParams => {
-    const q: QueryParams = {}
-    if (category) q.category = category
-    if (collection) q.collection = collection
-    return q
-  }
+  /* =======================
+     Handlers (URL SAFE)
+  ======================= */
 
-  /* Handlers */
   const handleCategoryChange = useCallback(
     (slug: string | null) => {
       startTransition(() => {
@@ -120,7 +124,11 @@ const Catalog = () => {
         setCurrentPage(1)
       })
 
-      setSearchParams(buildQuery(slug, selectedCollection))
+      const params = new URLSearchParams()
+      if (slug) params.set("category", slug)
+      if (selectedCollection) params.set("collection", selectedCollection)
+
+      setSearchParams(params)
     },
     [selectedCollection, setSearchParams]
   )
@@ -132,7 +140,11 @@ const Catalog = () => {
         setCurrentPage(1)
       })
 
-      setSearchParams(buildQuery(selectedCategory, slug))
+      const params = new URLSearchParams()
+      if (selectedCategory) params.set("category", selectedCategory)
+      if (slug) params.set("collection", slug)
+
+      setSearchParams(params)
     },
     [selectedCategory, setSearchParams]
   )
@@ -144,11 +156,14 @@ const Catalog = () => {
     setSelectedCollection(null)
     setShowOnlyInStock(false)
     setCurrentPage(1)
-    setSearchParams({})
+    setSearchParams(new URLSearchParams())
   }, [setSearchParams])
 
   const totalPages = Math.max(1, Math.ceil(total / PRODUCTS_PER_PAGE))
 
+  /* =======================
+     UI
+  ======================= */
   return (
     <div className="min-h-screen bg-background">
       <Navbar onCartClick={() => setIsCartOpen(true)} />

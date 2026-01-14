@@ -1,24 +1,36 @@
-import { motion } from "framer-motion";
-import { Link, useLocation } from "react-router-dom";
-import { ShoppingBag, Menu, X } from "lucide-react";
-import { useCart } from "@/context/CartContext";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { motion } from "framer-motion"
+import { Link, useLocation, useSearchParams } from "react-router-dom"
+import { ShoppingBag, Menu, X } from "lucide-react"
+import { useCart } from "@/context/CartContext"
+import { Button } from "@/components/ui/button"
+import { useState } from "react"
 
 interface NavbarProps {
-  onCartClick: () => void;
+  onCartClick: () => void
 }
 
 const Navbar = ({ onCartClick }: NavbarProps) => {
-  const { itemCount } = useCart();
-  const location = useLocation();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { itemCount } = useCart()
+  const location = useLocation()
+  const [searchParams] = useSearchParams()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  const category = searchParams.get("category")
+  const collection = searchParams.get("collection")
+
+  const catalogUrl = (() => {
+    const p = new URLSearchParams()
+    if (category) p.set("category", category)
+    if (collection) p.set("collection", collection)
+    const q = p.toString()
+    return q ? `/catalogo?${q}` : "/catalogo"
+  })()
 
   const links = [
     { href: "/", label: "Inicio" },
-    { href: "/catalogo", label: "Catálogo" },
-    { href: "/nosotros", label: "Nosotros" }, 
-  ];
+    { href: catalogUrl, label: "Catálogo" }, // 🔥 AHORA RESPETA LOS FILTROS
+    { href: "/nosotros", label: "Nosotros" },
+  ]
 
   return (
     <motion.nav
@@ -28,7 +40,7 @@ const Navbar = ({ onCartClick }: NavbarProps) => {
     >
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          {/* Logo - Ocupa espacio fijo */}
+          {/* Logo */}
           <div className="flex-1">
             <Link to="/">
               <motion.div
@@ -45,14 +57,14 @@ const Navbar = ({ onCartClick }: NavbarProps) => {
             </Link>
           </div>
 
-          {/* Desktop Navigation - Centrado absoluto */}
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
             {links.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
                 className={`text-sm font-medium transition-colors whitespace-nowrap ${
-                  location.pathname === link.href
+                  location.pathname === link.href.split("?")[0]
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
@@ -62,7 +74,7 @@ const Navbar = ({ onCartClick }: NavbarProps) => {
             ))}
           </div>
 
-          {/* Actions - Ocupa espacio fijo */}
+          {/* Actions */}
           <div className="flex-1 flex items-center justify-end gap-2">
             <Button
               variant="outline"
@@ -89,11 +101,7 @@ const Navbar = ({ onCartClick }: NavbarProps) => {
               className="md:hidden"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
-              {isMobileMenuOpen ? (
-                <X className="w-5 h-5" />
-              ) : (
-                <Menu className="w-5 h-5" />
-              )}
+              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </Button>
           </div>
         </div>
@@ -103,7 +111,6 @@ const Navbar = ({ onCartClick }: NavbarProps) => {
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
             className="md:hidden pt-4 pb-2 border-t border-border mt-4"
           >
             <div className="flex flex-col gap-2">
@@ -112,11 +119,7 @@ const Navbar = ({ onCartClick }: NavbarProps) => {
                   key={link.href}
                   to={link.href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className={`py-2 text-sm font-medium transition-colors ${
-                    location.pathname === link.href
-                      ? "text-primary"
-                      : "text-muted-foreground"
-                  }`}
+                  className="py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
                 >
                   {link.label}
                 </Link>
@@ -126,7 +129,7 @@ const Navbar = ({ onCartClick }: NavbarProps) => {
         )}
       </div>
     </motion.nav>
-  );
-};
+  )
+}
 
-export default Navbar;
+export default Navbar
