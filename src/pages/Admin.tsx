@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { Navigate } from "react-router-dom"
+import { motion } from "framer-motion"
 import { useAuth } from "@/context/AuthContext"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,7 +16,6 @@ import {
   Trash2,
   LogOut,
   Package,
-  AlertCircle,
   CheckCircle,
   Search,
   Filter,
@@ -23,18 +23,18 @@ import {
   Eye,
   BarChart3,
   TrendingUp,
-  ShoppingBag,
   AlertTriangle,
   ChevronDown,
   ChevronUp,
   RefreshCw,
-  Download,
-  Upload,
-  Settings,
   Layers,
   Tag,
   Image as ImageIcon,
   FileText,
+  Activity,
+  Percent,
+  Zap,
+  Star,
 } from "lucide-react"
 
 import {
@@ -78,6 +78,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
+import { Progress } from "@/components/ui/progress"
 
 /* ======================= TYPES ======================= */
 
@@ -127,6 +128,8 @@ interface StatsData {
   inStock: number
   outOfStock: number
   withImages: number
+  withDescriptions: number
+  categorized: number
 }
 
 /* ======================= HELPERS ======================= */
@@ -170,6 +173,8 @@ function calculateStats(products: AdminProduct[]): StatsData {
     inStock: products.filter((p) => p.inStock).length,
     outOfStock: products.filter((p) => !p.inStock).length,
     withImages: products.filter((p) => p.image).length,
+    withDescriptions: products.filter((p) => p.description?.trim()).length,
+    categorized: products.filter((p) => p.category).length,
   }
 }
 
@@ -178,34 +183,68 @@ function calculateStats(products: AdminProduct[]): StatsData {
 interface StatCardProps {
   title: string
   value: number
+  total?: number
   icon: React.ReactNode
   trend?: string
-  color: string
+  gradient: string
   delay: number
 }
 
-const StatCard = ({ title, value, icon, trend, color, delay }: StatCardProps) => {
+const StatCard = ({ title, value, total, icon, trend, gradient, delay }: StatCardProps) => {
+  const percentage = total ? Math.round((value / total) * 100) : 0
+  
   return (
-    <Card
-      className={`border-l-4 hover:shadow-lg transition-all duration-300 opacity-0 animate-[slideInUp_0.6s_ease-out_${delay}ms_forwards] hover:scale-[1.02]`}
-      style={{ borderLeftColor: color }}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: delay * 0.1, duration: 0.5 }}
     >
-      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          {title}
-        </CardTitle>
-        <div className={`p-2 rounded-lg bg-${color}/10`}>{icon}</div>
-      </CardHeader>
-      <CardContent>
-        <div className="text-3xl font-bold">{value}</div>
-        {trend && (
-          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-            <TrendingUp className="w-3 h-3" />
-            {trend}
-          </p>
-        )}
-      </CardContent>
-    </Card>
+      <Card className={`border-2 hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] ${gradient} relative overflow-hidden`}>
+        {/* Decorative element */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl" />
+        
+        <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 relative z-10">
+          <CardTitle className="text-sm font-semibold text-white/90 uppercase tracking-wider">
+            {title}
+          </CardTitle>
+          <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm">
+            {icon}
+          </div>
+        </CardHeader>
+        <CardContent className="relative z-10">
+          <div className="space-y-3">
+            <div className="flex items-baseline gap-2">
+              <div className="text-4xl font-black text-white">{value}</div>
+              {total && (
+                <div className="text-lg font-semibold text-white/70">/ {total}</div>
+              )}
+            </div>
+            
+            {total && (
+              <div className="space-y-2">
+                <Progress value={percentage} className="h-2 bg-white/20" />
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-white/90 font-semibold">{percentage}% completado</span>
+                  {trend && (
+                    <span className="flex items-center gap-1 text-white/80">
+                      <TrendingUp className="w-3 h-3" />
+                      {trend}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {!total && trend && (
+              <p className="text-sm text-white/80 flex items-center gap-1">
+                <Activity className="w-3 h-3" />
+                {trend}
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   )
 }
 
@@ -237,21 +276,23 @@ const FilterBar = ({
   hasActiveFilters,
 }: FilterBarProps) => {
   return (
-    <Card className="p-4 space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Filter className="w-5 h-5 text-muted-foreground" />
-          <h3 className="font-semibold">Filtros</h3>
+    <Card className="p-6 border-2">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30">
+            <Filter className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+          </div>
+          <h3 className="text-lg font-bold">Filtros</h3>
         </div>
         {hasActiveFilters && (
           <Button
             variant="ghost"
             size="sm"
             onClick={onClearFilters}
-            className="gap-2 text-xs"
+            className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
           >
-            <X className="w-3 h-3" />
-            Limpiar filtros
+            <X className="w-4 h-4" />
+            Limpiar
           </Button>
         )}
       </div>
@@ -325,7 +366,7 @@ const ProductRow = ({ product, onEdit, onDelete, onView }: ProductRowProps) => {
       <TableRow className="group hover:bg-muted/50 transition-colors">
         {/* Image */}
         <TableCell className="w-16">
-          <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
+          <div className="w-14 h-14 rounded-xl overflow-hidden bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center border-2">
             {product.image ? (
               <img
                 src={product.image}
@@ -333,13 +374,13 @@ const ProductRow = ({ product, onEdit, onDelete, onView }: ProductRowProps) => {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <ImageIcon className="w-5 h-5 text-muted-foreground" />
+              <ImageIcon className="w-6 h-6 text-muted-foreground/40" />
             )}
           </div>
         </TableCell>
 
         {/* Name */}
-        <TableCell className="font-medium">
+        <TableCell className="font-semibold">
           <div className="flex items-center gap-2">
             {product.name}
             {product.description && (
@@ -362,7 +403,7 @@ const ProductRow = ({ product, onEdit, onDelete, onView }: ProductRowProps) => {
         {/* Category */}
         <TableCell>
           {product.category ? (
-            <Badge variant="secondary" className="gap-1">
+            <Badge className="gap-1.5 bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30">
               <Tag className="w-3 h-3" />
               {product.category}
             </Badge>
@@ -374,7 +415,7 @@ const ProductRow = ({ product, onEdit, onDelete, onView }: ProductRowProps) => {
         {/* Collection */}
         <TableCell>
           {product.collection ? (
-            <Badge variant="outline" className="gap-1">
+            <Badge className="gap-1.5 bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-500/30">
               <Layers className="w-3 h-3" />
               {product.collection}
             </Badge>
@@ -385,23 +426,17 @@ const ProductRow = ({ product, onEdit, onDelete, onView }: ProductRowProps) => {
 
         {/* Stock */}
         <TableCell>
-          <div className="flex items-center gap-2">
-            {product.inStock ? (
-              <>
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                  En stock
-                </span>
-              </>
-            ) : (
-              <>
-                <div className="w-2 h-2 rounded-full bg-red-500" />
-                <span className="text-red-600 dark:text-red-400 font-medium">
-                  Sin stock
-                </span>
-              </>
-            )}
-          </div>
+          {product.inStock ? (
+            <Badge className="gap-1.5 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              En stock
+            </Badge>
+          ) : (
+            <Badge className="gap-1.5 bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/30">
+              <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+              Sin stock
+            </Badge>
+          )}
         </TableCell>
 
         {/* Actions */}
@@ -411,7 +446,7 @@ const ProductRow = ({ product, onEdit, onDelete, onView }: ProductRowProps) => {
               variant="ghost"
               size="sm"
               onClick={() => onView(product)}
-              className="h-8 w-8 p-0 hover:bg-primary/10 hover:text-primary"
+              className="h-8 w-8 p-0 hover:bg-blue-500/10 hover:text-blue-600"
             >
               <Eye className="w-4 h-4" />
             </Button>
@@ -419,7 +454,7 @@ const ProductRow = ({ product, onEdit, onDelete, onView }: ProductRowProps) => {
               variant="ghost"
               size="sm"
               onClick={() => onEdit(product)}
-              className="h-8 w-8 p-0 hover:bg-blue-500/10 hover:text-blue-600"
+              className="h-8 w-8 p-0 hover:bg-amber-500/10 hover:text-amber-600"
             >
               <Pencil className="w-4 h-4" />
             </Button>
@@ -437,10 +472,12 @@ const ProductRow = ({ product, onEdit, onDelete, onView }: ProductRowProps) => {
 
       {/* Expanded Description Row */}
       {isExpanded && product.description && (
-        <TableRow className="bg-muted/30">
-          <TableCell colSpan={6} className="py-3">
-            <div className="flex gap-2 text-sm text-muted-foreground pl-14">
-              <FileText className="w-4 h-4 mt-0.5 flex-shrink-0" />
+        <TableRow className="bg-gradient-to-r from-muted/50 to-muted/20">
+          <TableCell colSpan={6} className="py-4">
+            <div className="flex gap-3 text-sm pl-14">
+              <div className="p-2 rounded-lg bg-primary/10 shrink-0">
+                <FileText className="w-4 h-4 text-primary" />
+              </div>
               <p className="leading-relaxed">{product.description}</p>
             </div>
           </TableCell>
@@ -717,30 +754,39 @@ const Admin = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Package className="w-16 h-16 animate-bounce text-primary" />
-          <p className="text-muted-foreground animate-pulse">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-purple-500/5">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center gap-6"
+        >
+          <div className="relative">
+            <Package className="w-20 h-20 text-primary animate-bounce" />
+            <div className="absolute inset-0 w-20 h-20 animate-ping opacity-20">
+              <Package className="w-20 h-20 text-primary" />
+            </div>
+          </div>
+          <p className="text-lg font-semibold text-muted-foreground animate-pulse">
             Cargando panel de administración...
           </p>
-        </div>
+        </motion.div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-purple-500/10">
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-6 py-4">
+      <header className="sticky top-0 z-40 border-b-2 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 shadow-lg">
+        <div className="container mx-auto px-6 py-5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Package className="w-6 h-6 text-primary" />
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-primary to-primary/80 shadow-lg shadow-primary/30">
+                <Package className="w-7 h-7 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold">Panel de Administración</h1>
-                <p className="text-sm text-muted-foreground">
+                <h1 className="text-2xl font-black tracking-tight">Panel de Administración</h1>
+                <p className="text-sm text-muted-foreground font-medium">
                   Gestiona tu catálogo de productos
                 </p>
               </div>
@@ -752,79 +798,99 @@ const Admin = () => {
                 size="sm"
                 onClick={() => loadData(true)}
                 disabled={isRefreshing}
-                className="gap-2"
+                className="gap-2 border-2 hover:border-primary/50"
               >
                 <RefreshCw
                   className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
                 />
-                Actualizar
+                <span className="hidden sm:inline">Actualizar</span>
               </Button>
 
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleLogout}
-                className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                className="gap-2 border-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 hover:border-red-500"
               >
                 <LogOut className="w-4 h-4" />
-                Cerrar sesión
+                <span className="hidden sm:inline">Cerrar sesión</span>
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-8 space-y-8">
+      <main className="container mx-auto px-6 py-10 space-y-8">
         {/* Stats Cards */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <StatCard
             title="Total Productos"
             value={stats.total}
-            icon={<Package className="w-5 h-5 text-blue-600" />}
-            color="#3b82f6"
+            icon={<Package className="w-6 h-6 text-white" />}
+            trend="Inventario completo"
+            gradient="bg-gradient-to-br from-blue-500 to-blue-600 border-blue-400"
             delay={0}
           />
           <StatCard
             title="En Stock"
             value={stats.inStock}
-            icon={<CheckCircle className="w-5 h-5 text-emerald-600" />}
-            trend={`${Math.round((stats.inStock / stats.total) * 100)}% del total`}
-            color="#10b981"
-            delay={100}
+            total={stats.total}
+            icon={<CheckCircle className="w-6 h-6 text-white" />}
+            trend="Disponibles"
+            gradient="bg-gradient-to-br from-emerald-500 to-emerald-600 border-emerald-400"
+            delay={1}
           />
           <StatCard
             title="Sin Stock"
             value={stats.outOfStock}
-            icon={<AlertTriangle className="w-5 h-5 text-amber-600" />}
-            color="#f59e0b"
-            delay={200}
+            total={stats.total}
+            icon={<AlertTriangle className="w-6 h-6 text-white" />}
+            trend="Requieren atención"
+            gradient="bg-gradient-to-br from-amber-500 to-amber-600 border-amber-400"
+            delay={2}
           />
           <StatCard
             title="Con Imágenes"
             value={stats.withImages}
-            icon={<ImageIcon className="w-5 h-5 text-purple-600" />}
-            trend={`${Math.round((stats.withImages / stats.total) * 100)}% del total`}
-            color="#a855f7"
-            delay={300}
+            total={stats.total}
+            icon={<ImageIcon className="w-6 h-6 text-white" />}
+            gradient="bg-gradient-to-br from-purple-500 to-purple-600 border-purple-400"
+            delay={3}
+          />
+          <StatCard
+            title="Con Descripción"
+            value={stats.withDescriptions}
+            total={stats.total}
+            icon={<FileText className="w-6 h-6 text-white" />}
+            gradient="bg-gradient-to-br from-pink-500 to-pink-600 border-pink-400"
+            delay={4}
+          />
+          <StatCard
+            title="Categorizados"
+            value={stats.categorized}
+            total={stats.total}
+            icon={<Tag className="w-6 h-6 text-white" />}
+            gradient="bg-gradient-to-br from-cyan-500 to-cyan-600 border-cyan-400"
+            delay={5}
           />
         </div>
 
         {/* Actions Bar */}
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
+        <Card className="p-5 border-2 shadow-lg">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <Button onClick={openCreate} className="gap-2 shadow-lg hover:shadow-xl transition-shadow">
-                <Plus className="w-4 h-4" />
+              <Button onClick={openCreate} className="gap-2 shadow-xl hover:shadow-2xl transition-all hover:scale-105 bg-gradient-to-r from-primary to-primary/80">
+                <Plus className="w-5 h-5" />
                 Nuevo Producto
               </Button>
               
-              <div className="h-8 w-px bg-border" />
+              <div className="h-10 w-px bg-border hidden sm:block" />
               
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <BarChart3 className="w-4 h-4" />
+                <BarChart3 className="w-5 h-5 text-primary" />
                 <span>
-                  Mostrando <span className="font-semibold text-foreground">{filteredProducts.length}</span> de{" "}
-                  <span className="font-semibold text-foreground">{stats.total}</span> productos
+                  Mostrando <span className="font-bold text-foreground text-base">{filteredProducts.length}</span> de{" "}
+                  <span className="font-bold text-foreground text-base">{stats.total}</span> productos
                 </span>
               </div>
             </div>
@@ -846,27 +912,29 @@ const Admin = () => {
         />
 
         {/* Products Table */}
-        <Card>
-          <div className="rounded-lg border">
+        <Card className="border-2 shadow-xl">
+          <div className="rounded-lg overflow-hidden">
             <Table>
               <TableHeader>
-                <TableRow className="bg-muted/50">
+                <TableRow className="bg-gradient-to-r from-muted to-muted/50 hover:from-muted hover:to-muted/50">
                   <TableHead className="w-16"></TableHead>
-                  <TableHead className="font-semibold">Nombre</TableHead>
-                  <TableHead className="font-semibold">Categoría</TableHead>
-                  <TableHead className="font-semibold">Colección</TableHead>
-                  <TableHead className="font-semibold">Stock</TableHead>
-                  <TableHead className="text-right font-semibold">Acciones</TableHead>
+                  <TableHead className="font-bold">Nombre</TableHead>
+                  <TableHead className="font-bold">Categoría</TableHead>
+                  <TableHead className="font-bold">Colección</TableHead>
+                  <TableHead className="font-bold">Stock</TableHead>
+                  <TableHead className="text-right font-bold">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredProducts.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="h-64 text-center">
-                      <div className="flex flex-col items-center gap-3 text-muted-foreground">
-                        <Package className="w-12 h-12" />
+                      <div className="flex flex-col items-center gap-4 text-muted-foreground">
+                        <div className="p-6 rounded-2xl bg-gradient-to-br from-muted to-muted/50">
+                          <Package className="w-16 h-16" />
+                        </div>
                         <div>
-                          <p className="font-medium text-lg">No hay productos</p>
+                          <p className="font-semibold text-xl mb-2">No hay productos</p>
                           <p className="text-sm">
                             {hasActiveFilters
                               ? "No se encontraron productos con los filtros aplicados"
@@ -901,7 +969,7 @@ const Admin = () => {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto border-2">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-2xl">
               {editing ? (
@@ -1005,7 +1073,7 @@ const Admin = () => {
 
             {/* Stock Switch */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+              <div className="flex items-center justify-between p-4 rounded-lg border-2 bg-muted/30">
                 <div className="flex items-center gap-3">
                   <Package className="w-5 h-5 text-muted-foreground" />
                   <div>
@@ -1069,7 +1137,7 @@ const Admin = () => {
 
       {/* View Product Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-3xl border-2">
           {viewingProduct && (
             <>
               <DialogHeader>
@@ -1082,7 +1150,7 @@ const Admin = () => {
               <div className="space-y-6">
                 {/* Image */}
                 {viewingProduct.image && (
-                  <div className="aspect-video w-full rounded-lg overflow-hidden bg-muted flex items-center justify-center">
+                  <div className="aspect-video w-full rounded-xl overflow-hidden bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center border-2">
                     <img
                       src={viewingProduct.image}
                       alt={viewingProduct.name}
@@ -1110,7 +1178,7 @@ const Admin = () => {
                       <Label className="text-muted-foreground text-sm">Categoría</Label>
                       <div className="mt-1">
                         {viewingProduct.category ? (
-                          <Badge variant="secondary" className="gap-1">
+                          <Badge className="gap-1.5 bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30">
                             <Tag className="w-3 h-3" />
                             {viewingProduct.category}
                           </Badge>
@@ -1124,7 +1192,7 @@ const Admin = () => {
                       <Label className="text-muted-foreground text-sm">Colección</Label>
                       <div className="mt-1">
                         {viewingProduct.collection ? (
-                          <Badge variant="outline" className="gap-1">
+                          <Badge className="gap-1.5 bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-500/30">
                             <Layers className="w-3 h-3" />
                             {viewingProduct.collection}
                           </Badge>
@@ -1137,21 +1205,17 @@ const Admin = () => {
 
                   <div>
                     <Label className="text-muted-foreground text-sm">Disponibilidad</Label>
-                    <div className="mt-1 flex items-center gap-2">
+                    <div className="mt-1">
                       {viewingProduct.inStock ? (
-                        <>
-                          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                          <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                            En stock
-                          </span>
-                        </>
+                        <Badge className="gap-1.5 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30">
+                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          En stock
+                        </Badge>
                       ) : (
-                        <>
-                          <div className="w-2 h-2 rounded-full bg-red-500" />
-                          <span className="text-red-600 dark:text-red-400 font-medium">
-                            Sin stock
-                          </span>
-                        </>
+                        <Badge className="gap-1.5 bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/30">
+                          <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                          Sin stock
+                        </Badge>
                       )}
                     </div>
                   </div>
@@ -1183,7 +1247,7 @@ const Admin = () => {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="border-2">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-xl">
               <AlertTriangle className="w-5 h-5 text-destructive" />
@@ -1214,29 +1278,6 @@ const Admin = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Custom Animations */}
-      <style>{`
-        @keyframes slideInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-      `}</style>
     </div>
   )
 }

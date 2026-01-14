@@ -15,16 +15,14 @@ import {
   ChevronsRight,
   Package,
   Sparkles,
-  TrendingUp,
   Zap,
-  LayoutGrid,
   Filter,
-  Search,
   RefreshCw,
+  Shield,
+  Truck,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card } from "@/components/ui/card"
 
 const PRODUCTS_PER_PAGE = 24
 
@@ -65,7 +63,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, isLoading }: Pagina
         size="icon"
         disabled={!canGoPrev || isLoading}
         onClick={() => onPageChange(1)}
-        className="hidden sm:inline-flex hover:scale-110 transition-transform"
+        className="hidden sm:inline-flex hover:scale-105 transition-transform"
       >
         <ChevronsLeft className="w-4 h-4" />
       </Button>
@@ -76,14 +74,13 @@ const Pagination = ({ currentPage, totalPages, onPageChange, isLoading }: Pagina
         size="icon"
         disabled={!canGoPrev || isLoading}
         onClick={() => onPageChange(currentPage - 1)}
-        className="hover:scale-110 transition-transform"
+        className="hover:scale-105 transition-transform"
       >
         <ChevronLeft className="w-4 h-4" />
       </Button>
 
       {/* Page Numbers */}
       <div className="flex items-center gap-2">
-        {/* Show up to 5 page numbers */}
         {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
           let pageNum: number
 
@@ -109,8 +106,8 @@ const Pagination = ({ currentPage, totalPages, onPageChange, isLoading }: Pagina
               className={`
                 transition-all duration-300
                 ${isActive 
-                  ? "scale-110 shadow-lg ring-2 ring-primary ring-offset-2" 
-                  : "hover:scale-105"
+                  ? "scale-110 shadow-xl shadow-primary/30" 
+                  : "hover:scale-105 hover:border-primary/50"
                 }
               `}
             >
@@ -126,7 +123,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, isLoading }: Pagina
         size="icon"
         disabled={!canGoNext || isLoading}
         onClick={() => onPageChange(currentPage + 1)}
-        className="hover:scale-110 transition-transform"
+        className="hover:scale-105 transition-transform"
       >
         <ChevronRight className="w-4 h-4" />
       </Button>
@@ -137,16 +134,16 @@ const Pagination = ({ currentPage, totalPages, onPageChange, isLoading }: Pagina
         size="icon"
         disabled={!canGoNext || isLoading}
         onClick={() => onPageChange(totalPages)}
-        className="hidden sm:inline-flex hover:scale-110 transition-transform"
+        className="hidden sm:inline-flex hover:scale-105 transition-transform"
       >
         <ChevronsRight className="w-4 h-4" />
       </Button>
 
       {/* Page Info */}
-      <div className="ml-4 hidden md:flex items-center gap-2 text-sm text-muted-foreground">
-        <span className="font-medium text-foreground">{currentPage}</span>
-        <span>/</span>
-        <span>{totalPages}</span>
+      <div className="ml-4 hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-muted/50 border">
+        <span className="text-sm font-semibold">{currentPage}</span>
+        <span className="text-sm text-muted-foreground">/</span>
+        <span className="text-sm text-muted-foreground">{totalPages}</span>
       </div>
     </motion.div>
   )
@@ -165,33 +162,40 @@ const StatsBar = ({ total, isLoading, hasFilters }: StatsBarProps) => {
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex items-center justify-between mb-6"
+      className="flex items-center justify-between mb-8"
     >
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2">
+        <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20">
           <Package className="w-5 h-5 text-primary" />
-          <span className="text-sm text-muted-foreground">
-            {isLoading ? (
-              <span className="flex items-center gap-2">
-                <RefreshCw className="w-3 h-3 animate-spin" />
-                Cargando...
-              </span>
-            ) : (
-              <>
-                <span className="font-bold text-foreground text-lg">{total}</span>{" "}
-                {total === 1 ? "producto" : "productos"}
-                {hasFilters && " encontrados"}
-              </>
-            )}
-          </span>
+        </div>
+        <div>
+          {isLoading ? (
+            <div className="flex items-center gap-2">
+              <RefreshCw className="w-4 h-4 animate-spin text-primary" />
+              <span className="text-sm font-medium text-muted-foreground">Cargando productos...</span>
+            </div>
+          ) : (
+            <>
+              <p className="text-2xl font-bold">{total}</p>
+              <p className="text-sm text-muted-foreground">
+                {total === 1 ? "producto disponible" : "productos disponibles"}
+                {hasFilters && " (filtrados)"}
+              </p>
+            </>
+          )}
         </div>
       </div>
 
       {hasFilters && !isLoading && (
-        <Badge variant="secondary" className="gap-1 animate-in fade-in duration-300">
-          <Filter className="w-3 h-3" />
-          Filtros activos
-        </Badge>
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+        >
+          <Badge className="gap-1.5 px-3 py-1.5 bg-primary/20 text-primary border-primary/30">
+            <Filter className="w-3.5 h-3.5" />
+            Filtros activos
+          </Badge>
+        </motion.div>
       )}
     </motion.div>
   )
@@ -207,12 +211,12 @@ const SkeletonGrid = () => {
           key={i}
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: i * 0.05 }}
+          transition={{ delay: i * 0.04 }}
           className="space-y-3"
         >
-          <div className="aspect-square bg-gradient-to-br from-muted/80 to-muted/40 animate-pulse rounded-xl" />
-          <div className="h-4 bg-muted/60 animate-pulse rounded w-3/4" />
-          <div className="h-3 bg-muted/40 animate-pulse rounded w-1/2" />
+          <div className="aspect-square bg-gradient-to-br from-primary/5 via-muted/50 to-primary/5 animate-pulse rounded-2xl border" />
+          <div className="h-4 bg-muted/60 animate-pulse rounded-full w-3/4" />
+          <div className="h-3 bg-muted/40 animate-pulse rounded-full w-1/2" />
         </motion.div>
       ))}
     </div>
@@ -226,38 +230,50 @@ const HeroSection = ({ total, isLoading }: { total: number; isLoading: boolean }
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-      className="text-center mb-10 space-y-4"
+      transition={{ duration: 0.5 }}
+      className="text-center mb-12 space-y-6"
     >
       {/* Title with gradient */}
-      <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent animate-in slide-in-from-top-4 duration-700">
-        Nuestro Catálogo
-      </h1>
+      <div className="space-y-3">
+        <motion.h1
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight"
+        >
+          <span className="bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">
+            Nuestro Catálogo
+          </span>
+        </motion.h1>
+        
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto"
+        >
+          Descubre nuestra selección de productos de calidad
+        </motion.p>
+      </div>
 
-      {/* Subtitle */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2, duration: 0.6 }}
-        className="text-lg text-muted-foreground max-w-2xl mx-auto"
-      >
-        Descubre nuestra selección de productos premium
-      </motion.p>
-
-      {/* Quick Stats */}
+      {/* Quick Features */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.4, duration: 0.5 }}
-        className="flex items-center justify-center gap-6 pt-2"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="flex flex-wrap items-center justify-center gap-4 pt-2"
       >
-        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
           <Sparkles className="w-4 h-4 text-primary" />
-          <span className="text-sm font-medium">Calidad Premium</span>
+          <span className="text-sm font-semibold">Alta Calidad</span>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-          <Zap className="w-4 h-4 text-emerald-500" />
-          <span className="text-sm font-medium">Entrega Rápida</span>
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20">
+          <Truck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          <span className="text-sm font-semibold">Envío Rápido</span>
+        </div>
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-gradient-to-r from-blue-500/10 to-blue-500/5 border border-blue-500/20">
+          <Shield className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+          <span className="text-sm font-semibold">Garantía</span>
         </div>
       </motion.div>
     </motion.div>
@@ -404,7 +420,6 @@ const Catalog = () => {
 
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page)
-    // Smooth scroll to top
     window.scrollTo({ top: 0, behavior: "smooth" })
   }, [])
 
@@ -426,7 +441,7 @@ const Catalog = () => {
       {/* Spacer for fixed navbar */}
       <div className="h-20" />
 
-      <main className="container mx-auto px-4 pt-8 pb-20">
+      <main className="container mx-auto px-4 pt-10 pb-20">
         {/* Hero Section */}
         <HeroSection total={total} isLoading={isLoading} />
 
@@ -434,7 +449,7 @@ const Catalog = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
+          transition={{ delay: 0.2 }}
         >
           <SearchBar value={searchQuery} onChange={setSearchQuery} />
         </motion.div>
@@ -443,7 +458,7 @@ const Catalog = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
+          transition={{ delay: 0.3 }}
         >
           <Filters
             categories={categories}
@@ -467,8 +482,8 @@ const Catalog = () => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.5, duration: 0.5 }}
-          className="mt-8"
+          transition={{ delay: 0.4 }}
+          className="mt-10"
         >
           <StatsBar 
             total={total} 
@@ -494,7 +509,7 @@ const Catalog = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.4 }}
             >
               <ProductGrid 
                 products={products} 
@@ -519,37 +534,27 @@ const Catalog = () => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="text-center mt-8 text-sm text-muted-foreground"
+            transition={{ delay: 0.2 }}
+            className="text-center mt-10 px-4 py-3 rounded-full bg-muted/50 border inline-block mx-auto"
           >
-            Mostrando{" "}
-            <span className="font-semibold text-foreground">
-              {(currentPage - 1) * PRODUCTS_PER_PAGE + 1}
-            </span>
-            {" "}-{" "}
-            <span className="font-semibold text-foreground">
-              {Math.min(currentPage * PRODUCTS_PER_PAGE, total)}
-            </span>
-            {" "}de{" "}
-            <span className="font-semibold text-foreground">{total}</span>
-            {" "}productos
+            <p className="text-sm">
+              Mostrando{" "}
+              <span className="font-bold text-primary">
+                {(currentPage - 1) * PRODUCTS_PER_PAGE + 1}
+              </span>
+              {" "}-{" "}
+              <span className="font-bold text-primary">
+                {Math.min(currentPage * PRODUCTS_PER_PAGE, total)}
+              </span>
+              {" "}de{" "}
+              <span className="font-bold text-primary">{total}</span>
+              {" "}productos
+            </p>
           </motion.div>
         )}
       </main>
 
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-
-      {/* Custom Styles */}
-      <style>{`
-        @keyframes gradient-shift {
-          0%, 100% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-        }
-      `}</style>
     </div>
   )
 }

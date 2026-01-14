@@ -1,8 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Trash2, MessageCircle, ShoppingBag, Loader2 } from "lucide-react";
+import { Trash2, MessageCircle, ShoppingBag, Loader2, X, Package, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Sheet,
   SheetContent,
@@ -76,22 +77,18 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
       if (isIOS || isSafari) {
-        // Para Safari/iOS: usar window.location directamente
         window.location.href = whatsappUrl;
       } else {
-        // Para otros navegadores: usar window.open
         const newWindow = window.open(
           whatsappUrl,
           "_blank",
           "noopener,noreferrer"
         );
         if (!newWindow) {
-          // Fallback si el popup fue bloqueado
           window.location.href = whatsappUrl;
         }
       }
 
-      // Limpiar carrito después de un pequeño delay para asegurar que se abrió WhatsApp
       setTimeout(() => {
         clearCart();
         onClose();
@@ -101,7 +98,7 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
         description: "Consulta enviada exitosamente",
         duration: 2000,
         className:
-          "bg-black/95 backdrop-blur-xl border border-emerald-400/50 text-white shadow-[0_0_25px_rgba(16,185,129,0.5)]",
+          "bg-emerald-500/90 backdrop-blur-xl border border-emerald-400/50 text-white shadow-xl",
       });
     } catch (err: unknown) {
       console.error("Error al enviar consulta:", err);
@@ -112,8 +109,6 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
             ? err.message
             : "No se pudo enviar la consulta. Intentá nuevamente.",
         variant: "destructive",
-        className:
-          "bg-black/95 backdrop-blur-xl border border-red-500/50 text-white shadow-[0_0_25px_rgba(239,68,68,0.5)]",
       });
     } finally {
       setIsLoading(false);
@@ -128,8 +123,6 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
     toast({
       description: `Producto eliminado: ${name}`,
       duration: 2000,
-      className:
-        "bg-black/95 backdrop-blur-xl border border-white/20 text-white shadow-[0_0_25px_rgba(255,255,255,0.2)]",
     });
   };
 
@@ -139,127 +132,174 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
     toast({
       description: "Consulta vaciada",
       duration: 2000,
-      className:
-        "bg-black/95 backdrop-blur-xl border border-white/20 text-white shadow-[0_0_25px_rgba(255,255,255,0.2)]",
     });
   };
 
   return (
     <>
       <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <SheetContent className="w-full sm:max-w-md flex flex-col bg-black/95 backdrop-blur-xl border-l border-white/10">
+        <SheetContent className="w-full sm:max-w-lg flex flex-col bg-background border-l-2">
           {/* HEADER */}
-          <SheetHeader className="pb-4 border-b border-white/10">
-            <SheetTitle className="flex items-center gap-2 text-white">
-              <ShoppingBag className="w-5 h-5" />
-              Mi Consulta ({items.length})
-            </SheetTitle>
+          <SheetHeader className="pb-6 border-b-2">
+            <div className="flex items-center justify-between">
+              <SheetTitle className="flex items-center gap-3 text-2xl">
+                <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20">
+                  <ShoppingBag className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <p className="font-bold">Mi Consulta</p>
+                  <p className="text-sm font-normal text-muted-foreground">
+                    {items.length} {items.length === 1 ? "producto" : "productos"}
+                  </p>
+                </div>
+              </SheetTitle>
+              
+              {items.length > 0 && (
+                <Badge className="bg-primary/20 text-primary border-primary/30 px-3 py-1">
+                  {items.length}
+                </Badge>
+              )}
+            </div>
           </SheetHeader>
 
           {/* EMPTY STATE */}
           {items.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center gap-3">
+            <div className="flex-1 flex flex-col items-center justify-center gap-6 py-12">
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.3 }}
+                transition={{ type: "spring", duration: 0.5 }}
+                className="p-8 rounded-2xl bg-gradient-to-br from-muted/50 to-muted/20 border-2 border-dashed border-muted-foreground/20"
               >
-                <ShoppingBag className="w-16 h-16 text-white/20" />
+                <ShoppingBag className="w-20 h-20 text-muted-foreground/40" />
               </motion.div>
-              <p className="text-sm text-muted-foreground text-center">
-                No hay productos en la consulta
-              </p>
+              <div className="text-center space-y-2">
+                <p className="text-lg font-semibold">Tu consulta está vacía</p>
+                <p className="text-sm text-muted-foreground max-w-xs">
+                  Agregá productos desde el catálogo para comenzar tu consulta
+                </p>
+              </div>
             </div>
           ) : (
             <>
               {/* LISTADO */}
-              <div className="flex-1 overflow-y-auto py-4 space-y-3">
+              <div className="flex-1 overflow-y-auto py-6 space-y-3">
                 <AnimatePresence mode="popLayout">
-                  {items.map((item) => (
+                  {items.map((item, index) => (
                     <motion.div
                       key={item.id}
                       layout
-                      initial={{ opacity: 0, x: 24 }}
+                      initial={{ opacity: 0, x: 30 }}
                       animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -24, height: 0, marginBottom: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="group flex items-center gap-3 p-3 rounded-xl
-                                 bg-white/5 border border-white/10
-                                 hover:bg-white/10 hover:border-emerald-400/40
-                                 hover:shadow-[0_0_18px_rgba(16,185,129,0.25)]
+                      exit={{ opacity: 0, x: -30, height: 0, marginBottom: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                      className="group relative flex items-center gap-4 p-4 rounded-2xl
+                                 bg-gradient-to-br from-card to-card/50
+                                 border-2 border-border
+                                 hover:border-primary/50
+                                 hover:shadow-xl hover:shadow-primary/10
                                  transition-all duration-300"
                     >
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-14 h-14 object-cover rounded-lg
-                                   border border-white/10
-                                   group-hover:shadow-[0_0_12px_rgba(255,255,255,0.25)]
-                                   transition"
-                      />
-
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-semibold text-white truncate">
-                          {item.name}
-                        </h4>
-                        <p className="text-xs text-muted-foreground">
-                          {item.category ?? "Sin categoría"}
-                        </p>
+                      {/* Image */}
+                      <div className="relative shrink-0">
+                        <div className="w-20 h-20 rounded-xl overflow-hidden bg-muted/30 border-2 border-border">
+                          {item.image ? (
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package className="w-8 h-8 text-muted-foreground/40" />
+                            </div>
+                          )}
+                        </div>
                       </div>
 
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleRemove(item.id, item.name)}
-                        aria-label={`Eliminar ${item.name} de la consulta`}
-                        className="text-muted-foreground
-                                   hover:text-red-500
-                                   hover:bg-red-500/10
-                                   hover:shadow-[0_0_10px_rgba(239,68,68,0.5)]
-                                   transition"
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-base truncate mb-1">
+                          {item.name}
+                        </h4>
+                        {item.category && (
+                          <Badge variant="secondary" className="text-xs">
+                            {item.category}
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Remove Button */}
+                      <motion.div
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
                       >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleRemove(item.id, item.name)}
+                          aria-label={`Eliminar ${item.name} de la consulta`}
+                          className="h-10 w-10 rounded-full
+                                     text-muted-foreground
+                                     hover:text-destructive
+                                     hover:bg-destructive/10
+                                     hover:border-destructive/20
+                                     border-2 border-transparent
+                                     transition-all"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </motion.div>
                     </motion.div>
                   ))}
                 </AnimatePresence>
               </div>
 
               {/* ACCIONES */}
-              <div className="pt-4 space-y-3 border-t border-white/10">
-                <Button
-                  onClick={handleWhatsAppClick}
-                  disabled={isLoading}
-                  className="w-full bg-[#25D366] text-black font-semibold
-                             hover:bg-[#1ebe5d]
-                             hover:shadow-[0_0_22px_rgba(37,211,102,0.9)]
-                             disabled:opacity-50 disabled:cursor-not-allowed
-                             transition-all duration-300"
+              <div className="pt-6 space-y-3 border-t-2">
+                {/* WhatsApp Button */}
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Enviando...
-                    </>
-                  ) : (
-                    <>
-                      <MessageCircle className="w-5 h-5 mr-2" />
-                      Consultar por WhatsApp
-                    </>
-                  )}
-                </Button>
+                  <Button
+                    onClick={handleWhatsAppClick}
+                    disabled={isLoading}
+                    size="lg"
+                    className="w-full h-14 text-base font-bold rounded-xl
+                               bg-[#25D366] text-white
+                               hover:bg-[#1ebe5d]
+                               hover:shadow-2xl hover:shadow-[#25D366]/50
+                               disabled:opacity-50 disabled:cursor-not-allowed
+                               transition-all duration-300"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Enviando consulta...
+                      </>
+                    ) : (
+                      <>
+                        <MessageCircle className="w-5 h-5 mr-2" />
+                        Consultar por WhatsApp
+                      </>
+                    )}
+                  </Button>
+                </motion.div>
 
+                {/* Clear Button */}
                 <Button
                   variant="outline"
                   onClick={() => setShowClearDialog(true)}
                   disabled={isLoading}
-                  className="w-full border-white/20 text-white
-                             hover:border-red-500
-                             hover:text-red-500
-                             hover:bg-red-500/10
-                             hover:shadow-[0_0_18px_rgba(239,68,68,0.7)]
+                  size="lg"
+                  className="w-full h-12 rounded-xl
+                             border-2
+                             hover:border-destructive
+                             hover:text-destructive
+                             hover:bg-destructive/5
                              disabled:opacity-50 disabled:cursor-not-allowed
-                             transition-all duration-300"
+                             transition-all"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
                   Vaciar consulta
@@ -272,24 +312,29 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
 
       {/* DIALOGO DE CONFIRMACIÓN */}
       <AlertDialog open={showClearDialog} onOpenChange={setShowClearDialog}>
-        <AlertDialogContent className="bg-black/95 backdrop-blur-xl border border-white/10">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-white">
+        <AlertDialogContent className="rounded-2xl border-2">
+          <AlertDialogHeader className="space-y-4">
+            <div className="mx-auto p-4 rounded-2xl bg-destructive/10 border-2 border-destructive/20 w-fit">
+              <Trash2 className="w-10 h-10 text-destructive" />
+            </div>
+            <AlertDialogTitle className="text-2xl text-center">
               ¿Vaciar consulta?
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-muted-foreground">
-              Se eliminarán todos los productos de tu consulta. Esta acción no
-              se puede deshacer.
+            <AlertDialogDescription className="text-center text-base">
+              Se eliminarán todos los productos de tu consulta.
+              <br />
+              Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="border-white/20 text-white hover:bg-white/10">
+          <AlertDialogFooter className="sm:space-x-2">
+            <AlertDialogCancel className="rounded-xl">
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleClear}
-              className="bg-red-500 hover:bg-red-600 text-white"
+              className="rounded-xl bg-destructive hover:bg-destructive/90 text-white"
             >
+              <Trash2 className="w-4 h-4 mr-2" />
               Vaciar
             </AlertDialogAction>
           </AlertDialogFooter>
