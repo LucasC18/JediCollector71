@@ -22,7 +22,7 @@ export async function createConsultation(
     throw new Error("No hay productos para consultar");
   }
 
-  return apiFetch<ConsultationResponse>("/api/v1/consultations", {
+  return apiFetch<ConsultationResponse>("/v1/consultations", {
     method: "POST",
     body: JSON.stringify({ items }),
   });
