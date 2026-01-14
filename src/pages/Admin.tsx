@@ -86,6 +86,7 @@ interface ApiError {
 
 interface AdminProduct extends Product {
   categoryId?: string;
+  collection?: string; // ⬅️ NUEVO
 }
 
 interface ProductFormState {
@@ -107,7 +108,7 @@ const EMPTY_FORM: ProductFormState = {
   imagePreview: "",
   inStock: true,
   stockQty: 0,
-  collection: "Figuras", // ⬅️ default
+  collection: "Bloques", // ⬅️ default
 };
 
 function mapAdminProducts(
@@ -142,7 +143,7 @@ function mapAdminProducts(
       description: p.description ?? "",
       inStock: p.inStock,
       stockQty: p.stockQty ?? 0,
-      collection: p.collection ?? "Figuras", // ⬅️ NUEVO
+      collection: p.collection ?? "Bloques", // ⬅️ NUEVO
     };
   });
 }
@@ -192,7 +193,7 @@ const Admin = () => {
 
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [activeCollection, setActiveCollection] = useState<string>("Figuras"); // ⬅️ NUEVO
+  const [activeCollection, setActiveCollection] = useState<string>("Bloques"); // ⬅️ NUEVO
 
   const totalProducts = products.length;
   const inStockProducts = products.filter((p) => p.inStock).length;
@@ -263,7 +264,7 @@ const Admin = () => {
       imagePreview: p.image,
       inStock: p.inStock,
       stockQty: p.stockQty ?? 0,
-      collection: p.collection ?? "Figuras", // ⬅️ NUEVO
+      collection: p.collection ?? "Bloques", // ⬅️ NUEVO
     });
     setDialogOpen(true);
   };
@@ -496,7 +497,10 @@ const Admin = () => {
           {["Bloques", "Personajes"].map((c) => (
             <button
               key={c}
-              onClick={() => setActiveCollection(c)}
+              onClick={() => {
+                setActiveCollection(c);
+                setForm(f => ({ ...f, collection: c }));
+              }}
               className={`px-6 py-3 rounded-xl border text-sm font-medium transition-all ${
                 activeCollection === c
                   ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/30 shadow-lg shadow-cyan-500/20"
