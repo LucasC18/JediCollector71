@@ -30,7 +30,7 @@ interface ProductContextType {
 const ProductContext = createContext<ProductContextType | undefined>(undefined)
 
 /* =======================
-   Mapper backend -> frontend
+   Mapper backend → frontend
    ======================= */
 function mapProductFromApi(p: ProductApiDTO): Product {
   return {
@@ -40,7 +40,11 @@ function mapProductFromApi(p: ProductApiDTO): Product {
     category: p.category ?? p.categoryName ?? "Sin categoría",
     description: p.description ?? "",
     inStock: p.inStock,
-    collection: p.collection ?? "Figuras",
+
+    // 🚨 FIX CRÍTICO:
+    // Antes era "Figuras" y rompía los filtros.
+    // Ahora coincide con lo que usa el backend y el catálogo.
+    collection: p.collection || "Personajes",
   }
 }
 
