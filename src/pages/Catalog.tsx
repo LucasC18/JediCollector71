@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useTransition } from "react"
+import { useEffect, useState, useTransition } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Navbar from "@/components/Navbar"
 import SearchBar from "@/components/SearchBar"
@@ -7,18 +7,7 @@ import ProductGrid from "@/components/ProductGrid"
 import CartDrawer from "@/components/CartDrawer"
 import { apiFetch } from "@/config/api"
 import { Product } from "@/types/product"
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  Package,
-  Sparkles,
-  Filter,
-  RefreshCw,
-  Shield,
-  Truck,
-} from "lucide-react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
@@ -28,14 +17,12 @@ type Category = {
   id: string
   name: string
   slug: string
-  productsCount: number
 }
 
 type Collection = {
   id: string
   name: string
   slug: string
-  productsCount: number
 }
 
 /* ======================= PAGINATION ======================= */
@@ -47,22 +34,32 @@ interface PaginationProps {
   isLoading: boolean
 }
 
-const Pagination = ({ currentPage, totalPages, onPageChange, isLoading }: PaginationProps) => {
-  const canGoPrev = currentPage > 1
-  const canGoNext = currentPage < totalPages
+const Pagination = ({
+  currentPage,
+  totalPages,
+  onPageChange,
+  isLoading,
+}: PaginationProps) => (
+  <motion.div className="flex justify-center gap-2 mt-12">
+    <Button
+      disabled={currentPage === 1 || isLoading}
+      onClick={() => onPageChange(currentPage - 1)}
+    >
+      <ChevronLeft />
+    </Button>
 
-  return (
-    <motion.div className="flex justify-center gap-2 mt-12">
-      <Button disabled={!canGoPrev || isLoading} onClick={() => onPageChange(currentPage - 1)}>
-        <ChevronLeft />
-      </Button>
-      <span className="px-4 py-2">{currentPage} / {totalPages}</span>
-      <Button disabled={!canGoNext || isLoading} onClick={() => onPageChange(currentPage + 1)}>
-        <ChevronRight />
-      </Button>
-    </motion.div>
-  )
-}
+    <span className="px-4 py-2 font-semibold">
+      {currentPage} / {totalPages}
+    </span>
+
+    <Button
+      disabled={currentPage === totalPages || isLoading}
+      onClick={() => onPageChange(currentPage + 1)}
+    >
+      <ChevronRight />
+    </Button>
+  </motion.div>
+)
 
 /* ======================= MAIN ======================= */
 
@@ -92,34 +89,28 @@ const Catalog = () => {
     return () => clearTimeout(id)
   }, [searchQuery])
 
-  /* Load filters */
+  /* Load categories + collections */
   useEffect(() => {
     apiFetch<Category[]>("/v1/categories").then(setCategories).catch(() => setCategories([]))
     apiFetch<Collection[]>("/v1/collections").then(setCollections).catch(() => setCollections([]))
   }, [])
 
-  /* Visible filters */
-  const visibleCollections = collections.filter(c => c.productsCount > 0)
-  const visibleCategories = categories.filter(c => c.productsCount > 0)
-
-  const filteredCategories =
-    selectedCollection === "star-wars"
-      ? visibleCategories
-      : visibleCategories.filter(c => c.slug !== "hasbro-375")
-
   /* Load products */
   useEffect(() => {
     const params = new URLSearchParams()
+
     if (selectedCategory) params.set("category", selectedCategory)
     if (selectedCollection) params.set("collection", selectedCollection)
     if (debouncedQuery) params.set("search", debouncedQuery)
     if (showOnlyInStock) params.set("inStock", "true")
+
     params.set("page", String(currentPage))
     params.set("limit", String(PRODUCTS_PER_PAGE))
 
     setIsLoading(true)
-    apiFetch<{ items: Product[]; total: number }>(`/v1/products?${params}`)
-      .then(res => {
+
+    apiFetch<{ items: Product[]; total: number }>(`/v1/products?${params.toString()}`)
+      .then((res) => {
         setProducts(res.items)
         setTotal(res.total)
       })
@@ -132,6 +123,30 @@ const Catalog = () => {
 
   const totalPages = Math.max(1, Math.ceil(total / PRODUCTS_PER_PAGE))
 
+  /* ============================
+     FILTROS INTELIGENTES
+  ============================ */
+
+  /* Colecciones que tienen productos */
+  const visibleCollections = collections.filter((col) =>
+    products.some((p) => p.collection === col.slug)
+  )
+
+  /* Categorías que tienen productos */
+  const visibleCategories = categories.filter((cat) =>
+    products.some((p) => p.category === cat.slug)
+  )
+
+  /* Hasbro 3.75 solo cuando la colección es Star Wars */
+  const filteredCategories =
+    selectedCollection === "star-wars"
+      ? visibleCategories
+      : visibleCategories.filter((c) => c.slug !== "hasbro-375")
+
+  /* ============================
+     HANDLERS
+  ============================ */
+
   const handleCategoryChange = (slug: string | null) => {
     startTransition(() => {
       setSelectedCategory(slug)
@@ -142,7 +157,7 @@ const Catalog = () => {
   const handleCollectionChange = (slug: string | null) => {
     startTransition(() => {
       setSelectedCollection(slug)
-      setSelectedCategory(null) // reset categorías incompatibles
+      setSelectedCategory(null)
       setCurrentPage(1)
     })
   }
@@ -155,6 +170,10 @@ const Catalog = () => {
     setShowOnlyInStock(false)
     setCurrentPage(1)
   }
+
+  /* ============================
+     UI
+  ============================ */
 
   return (
     <div className="min-h-screen bg-background">

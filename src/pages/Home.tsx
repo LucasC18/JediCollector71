@@ -24,14 +24,17 @@ const Home = () => {
   const [isLoadingCollections, setIsLoadingCollections] = useState(true)
 
   /* =======================
-     Fetch colecciones
+     Fetch colecciones (FIX REAL)
   ======================= */
   useEffect(() => {
     async function loadCollections() {
       try {
-        const res = await apiFetch<{ items: Collection[] }>(`/v1/collections`)
-        setCollections(res.items || [])
-      } catch {
+        const res = await apiFetch<Collection[]>("/v1/collections")
+
+        // Mostrar solo las que tienen productos
+        setCollections(res.filter(c => c.productsCount > 0))
+      } catch (err) {
+        console.error("Error cargando colecciones", err)
         setCollections([])
       } finally {
         setIsLoadingCollections(false)
@@ -42,9 +45,7 @@ const Home = () => {
   }, [])
 
   const scrollToCollections = () => {
-    document
-      .getElementById("destacados")
-      ?.scrollIntoView({ behavior: "smooth" })
+    document.getElementById("destacados")?.scrollIntoView({ behavior: "smooth" })
   }
 
   return (

@@ -1,79 +1,93 @@
-import { useEffect, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useParams } from "react-router-dom";
 
-import { useCart } from "@/context/CartContext"
-import { apiFetch } from "@/config/api"
-import { Product } from "@/types/product"
+import { useCart } from "@/context/CartContext";
+import { apiFetch } from "@/config/api";
+import { Product } from "@/types/product";
 
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import {
-  Loader2,
-  ArrowLeft,
-  Check,
-  PackageX,
-  Maximize2,
-  X,
-  ImageOff,
-  ShoppingCart,
-  Sparkles,
-  Tag,
-  Info,
-} from "lucide-react"
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, ArrowLeft, PackageX, X, ImageOff } from "lucide-react";
 
 interface ProductDetailProps {
-  id?: string
-  onNavigateBack?: () => void
-  onNavigateCatalog?: () => void
-  onCartClick?: () => void
+  id?: string;
+  onNavigateBack?: () => void;
+  onNavigateCatalog?: () => void;
 }
 
-const ProductDetail = ({ id, onNavigateBack, onNavigateCatalog }: ProductDetailProps) => {
-  const { addToCart, isInCart } = useCart()
+const ProductDetail = ({
+  id,
+  onNavigateBack,
+  onNavigateCatalog,
+}: ProductDetailProps) => {
+  const { id: paramId } = useParams<{ id: string }>();
+  const productId = useMemo(() => id || paramId, [id, paramId]);
 
-  const [product, setProduct] = useState<Product | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(false)
+  const { addToCart, isInCart } = useCart();
 
-  const [isImageModalOpen, setIsImageModalOpen] = useState(false)
-  const [imageLoaded, setImageLoaded] = useState(false)
+  const [product, setProduct] = useState<Product | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
   /* ================================
      LOAD PRODUCT
   ================================= */
+  type ProductApiResponse =
+    | { item: Product }
+    | { data: Product }
+    | { product: Product }
+    | Product;
+
   useEffect(() => {
-    if (!id) return
+    if (!productId) return;
 
-    setIsLoading(true)
-    setError(false)
-    setImageLoaded(false)
+    setIsLoading(true);
+    setError(false);
 
-    apiFetch<{ item: Product }>(`/v1/products/${id}`)
+    apiFetch<ProductApiResponse>(`/v1/products/${productId}`)
       .then((res) => {
-        setProduct(res.item ?? null)
+        // backend-proof extractor
+        const data =
+          "item" in res
+            ? res.item
+            : "data" in res
+            ? res.data
+            : "product" in res
+            ? res.product
+            : res;
+
+        setProduct(data ?? null);
       })
       .catch(() => setError(true))
-      .finally(() => setIsLoading(false))
-  }, [id])
+      .finally(() => setIsLoading(false));
+  }, [productId]);
 
-  const inCart = product ? isInCart(product.id) : false
+  const inCart = product ? isInCart(product.id) : false;
 
   const handleBack = () => {
-    if (onNavigateBack) onNavigateBack()
-    else if (onNavigateCatalog) onNavigateCatalog()
-  }
+    if (onNavigateBack) onNavigateBack();
+    else if (onNavigateCatalog) onNavigateCatalog();
+    else window.history.back();
+  };
 
   useEffect(() => {
-    document.body.style.overflow = isImageModalOpen ? "hidden" : ""
+    document.body.style.overflow = isImageModalOpen ? "hidden" : "";
     return () => {
-      document.body.style.overflow = ""
-    }
-  }, [isImageModalOpen])
+      document.body.style.overflow = "";
+    };
+  }, [isImageModalOpen]);
+
+  /* ================================
+     UI
+  ================================= */
 
   return (
-    <div className="bg-background flex flex-col min-h-screen">
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex-1">
-        {/* Back */}
+    <div className="bg-background min-h-screen">
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        {/* BACK */}
         <Button variant="ghost" onClick={handleBack} className="mb-6 gap-2">
           <ArrowLeft className="w-4 h-4" />
           Volver
@@ -113,7 +127,6 @@ const ProductDetail = ({ id, onNavigateBack, onNavigateCatalog }: ProductDetailP
                   alt={product.name}
                   className="w-full max-h-[500px] object-contain cursor-zoom-in"
                   onClick={() => setIsImageModalOpen(true)}
-                  onLoad={() => setImageLoaded(true)}
                 />
               ) : (
                 <div className="h-64 flex items-center justify-center text-muted-foreground">
@@ -152,6 +165,9 @@ const ProductDetail = ({ id, onNavigateBack, onNavigateCatalog }: ProductDetailP
           <motion.div
             className="fixed inset-0 bg-black/90 flex items-center justify-center z-50"
             onClick={() => setIsImageModalOpen(false)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
           >
             <motion.img
               src={product.image}
@@ -169,7 +185,7 @@ const ProductDetail = ({ id, onNavigateBack, onNavigateCatalog }: ProductDetailP
         )}
       </AnimatePresence>
     </div>
-  )
-}
+  );
+};
 
-export default ProductDetail
+export default ProductDetail;
