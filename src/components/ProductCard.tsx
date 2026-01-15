@@ -212,7 +212,7 @@ const ProductCard = React.forwardRef<HTMLElement, ProductCardProps>(
           </div>
 
           {/* Premium Badge for featured products */}
-          {product.inStock && index < 3 && (
+          {product.inStock && index < 4 && (
             <motion.div
               initial={{ scale: 0, rotate: -12 }}
               animate={{ scale: 1, rotate: -12 }}

@@ -2,47 +2,56 @@ import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { Link } from "react-router-dom"
 import Navbar from "@/components/Navbar"
-import ProductGrid from "@/components/ProductGrid"
 import CartDrawer from "@/components/CartDrawer"
 import { Sparkles, ChevronDown, ArrowRight } from "lucide-react"
 import heroImage from "@/assets/hero-starwars.jpg"
-import { Product } from "@/types/product"
 import { apiFetch } from "@/config/api"
+
+/* =======================
+   Tipado de colección
+======================= */
+interface Collection {
+  id: string
+  name: string
+  slug: string
+  imageUrl?: string
+  productsCount: number
+}
 
 const Home = () => {
   const [isCartOpen, setIsCartOpen] = useState(false)
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [collections, setCollections] = useState<Collection[]>([])
+  const [isLoadingCollections, setIsLoadingCollections] = useState(true)
 
   /* =======================
-     Fetch destacados
+     Fetch colecciones
   ======================= */
   useEffect(() => {
-    async function load() {
+    async function loadCollections() {
       try {
-        const res = await apiFetch<{ items: Product[] }>(
-          `/v1/products?inStock=true&limit=4`
-        )
-        setFeaturedProducts(res.items)
+        const res = await apiFetch<{ items: Collection[] }>(`/v1/collections`)
+        setCollections(res.items || [])
       } catch {
-        setFeaturedProducts([])
+        setCollections([])
       } finally {
-        setIsLoading(false)
+        setIsLoadingCollections(false)
       }
     }
 
-    load()
+    loadCollections()
   }, [])
 
-  const scrollToProducts = () => {
-    document.getElementById("destacados")?.scrollIntoView({ behavior: "smooth" })
+  const scrollToCollections = () => {
+    document
+      .getElementById("destacados")
+      ?.scrollIntoView({ behavior: "smooth" })
   }
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar onCartClick={() => setIsCartOpen(true)} />
 
-      {/* Hero */}
+      {/* ================= HERO ================= */}
       <section className="relative h-screen overflow-hidden">
         <motion.div
           initial={{ scale: 1.1 }}
@@ -52,7 +61,7 @@ const Home = () => {
         >
           <img
             src={heroImage}
-            alt="JediCollector71 Hero"
+            alt="Hero"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
@@ -68,7 +77,7 @@ const Home = () => {
             <div className="inline-flex items-center gap-2 px-4 py-2 glass-card rounded-full mb-6">
               <Sparkles className="w-4 h-4 text-secondary animate-pulse-glow" />
               <span className="text-sm font-medium text-secondary">
-                Colección Exclusiva
+                Colecciones Exclusivas
               </span>
             </div>
 
@@ -78,17 +87,17 @@ const Home = () => {
             </h1>
 
             <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto mb-10">
-              Explorá nuestra colección de personajes. Agregá los que te
-              interesen y consultá directamente por WhatsApp.
+              Explorá nuestros personajes organizados por colección. Elegí una y
+              encontrá tu próximo favorito.
             </p>
 
             <motion.button
-              onClick={scrollToProducts}
+              onClick={scrollToCollections}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="px-8 py-4 bg-primary text-primary-foreground font-display font-bold text-lg rounded-lg neon-glow hover:bg-primary/90 transition-colors"
             >
-              Ver Destacados
+              Ver Colecciones
             </motion.button>
           </motion.div>
 
@@ -102,7 +111,7 @@ const Home = () => {
               animate={{ y: [0, 10, 0] }}
               transition={{ duration: 2, repeat: Infinity }}
               className="flex flex-col items-center gap-2 cursor-pointer"
-              onClick={scrollToProducts}
+              onClick={scrollToCollections}
             >
               <span className="text-muted-foreground text-sm">Scroll</span>
               <ChevronDown className="w-6 h-6 text-primary" />
@@ -111,24 +120,34 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Featured */}
+      {/* ================= COLECCIONES ================= */}
       <main id="destacados" className="container mx-auto px-4 py-20 bg-grid">
         <div className="text-center mb-12">
           <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-            <span className="text-foreground">Personajes </span>
-            <span className="text-gradient">Destacados</span>
+            <span className="text-foreground">Explorá por </span>
+            <span className="text-gradient">Colección</span>
           </h2>
           <p className="text-muted-foreground">
-            Los personajes más populares de nuestra colección
+            Elegí una colección para ver sus personajes disponibles
           </p>
         </div>
 
-        {isLoading ? (
+        {isLoadingCollections ? (
           <p className="text-center text-muted-foreground">
-            Cargando productos...
+            Cargando colecciones...
           </p>
         ) : (
-          <ProductGrid products={featuredProducts} />
+          <div className="flex flex-wrap justify-center gap-4">
+            {collections.map((c) => (
+              <Link
+                key={c.id}
+                to={`/catalogo?collection=${c.slug}`}
+                className="px-6 py-3 glass-card neon-border rounded-full font-display font-semibold text-primary hover-glow transition-all"
+              >
+                {c.name}
+              </Link>
+            ))}
+          </div>
         )}
 
         <div className="flex justify-center mt-12">
