@@ -12,9 +12,21 @@ interface ProductApiDTO {
   description?: string | null
   inStock: boolean
 
-  // Slugs ya vienen listos desde el backend
   category?: string | null
+  categorySlug?: string | null
+
   collection?: string | null
+  collectionSlug?: string | null
+}
+
+/* =======================
+   API Response
+======================= */
+interface ProductListResponse {
+  items: ProductApiDTO[]
+  total: number
+  page: number
+  limit: number
 }
 
 /* =======================
@@ -28,11 +40,16 @@ function mapProductFromApi(p: ProductApiDTO): Product {
     description: p.description ?? "",
     inStock: p.inStock,
 
-    // Ya vienen como slug, se usan directo
-    category: p.category ?? null,
-    collection: p.collection ?? "",
+    // 🔥 Slugs reales para filtros
+    category: p.categorySlug ?? null,
+    categorySlug: p.categorySlug ?? null,
+
+    collection: p.collectionSlug ?? "",
+    collectionSlug: p.collectionSlug ?? "",
   }
 }
+
+
 
 /* =======================
    Context types
@@ -59,14 +76,13 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     setError(null)
 
     try {
-      // 🔥 Pedimos más de 50 productos
-      const res = await apiFetch<ProductApiDTO[]>("/v1/products?limit=1000")
+      const res = await apiFetch<ProductListResponse>("/v1/products?limit=1000")
 
-      if (!Array.isArray(res)) {
-        throw new Error("Formato inválido del backend")
+      if (!res || !Array.isArray(res.items)) {
+        throw new Error("Respuesta inválida del backend")
       }
 
-      const mapped = res.map(mapProductFromApi)
+      const mapped = res.items.map(mapProductFromApi)
       setProducts(mapped)
     } catch (e) {
       setProducts([])

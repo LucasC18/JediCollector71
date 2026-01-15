@@ -44,9 +44,7 @@ const useCounter = (end: number, duration = 2, reduceMotion = false) => {
   useEffect(() => {
     if (!isInView) return;
 
-    const safeEnd = Number.isFinite(end)
-      ? Math.max(0, Math.floor(end))
-      : 0;
+    const safeEnd = Number.isFinite(end) ? Math.max(0, Math.floor(end)) : 0;
 
     // si no cambió el valor objetivo, no re-animar
     if (lastEndRef.current === safeEnd) {
@@ -97,7 +95,6 @@ const useCounter = (end: number, duration = 2, reduceMotion = false) => {
 
   return { count, ref };
 };
-
 
 /* =========================================================
    Background decor
@@ -190,7 +187,6 @@ const StatCard = ({
     </motion.div>
   );
 };
-
 
 /* =========================================================
    FAQ Item
@@ -388,29 +384,28 @@ const About = () => {
   ];
 
   /* Features */
-const features = [
-  {
-    icon: MessageCircle,
-    emoji: "💬",
-    title: "Atención personalizada",
-    description:
-      "Respondemos todas tus consultas por WhatsApp de forma clara y directa.",
-  },
-  {
-    icon: Truck,
-    emoji: "🚚",
-    title: "Envíos seguros",
-    description: "Empaque cuidado, seguimiento y envío a todo el país.",
-  },
-  {
-    icon: Shield,
-    emoji: "🛡️",
-    title: "Compra con confianza",
-    description:
-      "Información clara, stock real y acompañamiento en todo el proceso.",
-  },
-];
-
+  const features = [
+    {
+      icon: MessageCircle,
+      emoji: "💬",
+      title: "Atención personalizada",
+      description:
+        "Respondemos todas tus consultas por WhatsApp de forma clara y directa.",
+    },
+    {
+      icon: Truck,
+      emoji: "🚚",
+      title: "Envíos seguros",
+      description: "Empaque cuidado, seguimiento y envío a todo el país.",
+    },
+    {
+      icon: Shield,
+      emoji: "🛡️",
+      title: "Compra con confianza",
+      description:
+        "Información clara, stock real y acompañamiento en todo el proceso.",
+    },
+  ];
 
   /* Testimonials */
   const testimonials = [
@@ -436,10 +431,7 @@ const features = [
 
   const goToCatalogWithCategory = (category: string) => {
     const search = `?category=${encodeURIComponent(category)}`;
-    navigate(
-      { pathname: "/catalogo", search },
-      { state: { category } }
-    );
+    navigate({ pathname: "/catalogo", search }, { state: { category } });
   };
 
   return (
@@ -468,21 +460,22 @@ const features = [
             transition={{ delay: 0.25 }}
             className="text-muted-foreground text-xl max-w-3xl mx-auto"
           >
-            Explorá figuras icónicas de Star Wars, Marvel, Harry Potter, DC y más.
-            Cada pieza tiene su historia.
+            Explorá figuras icónicas de Star Wars, Marvel, Harry Potter, DC y
+            más. Cada pieza tiene su historia.
           </motion.p>
         </motion.section>
 
         {/* STATS */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto mb-32">
           <StatCard
-            value={products.length}
+            value={Number(products?.length || 0)}
             label="Productos publicados"
             suffix="+"
             icon={Package}
             emoji="📦"
             reduceMotion={!!reduceMotion}
           />
+
           <StatCard
             value={500}
             label="Clientes satisfechos"
@@ -521,13 +514,13 @@ const features = [
 
               <p className="text-muted-foreground text-lg leading-relaxed">
                 Somos una tienda de exhibición y consulta dedicada al mundo del
-                coleccionismo. Organizamos figuras por categorías para que puedas
-                explorar con comodidad y claridad.
+                coleccionismo. Organizamos figuras por categorías para que
+                puedas explorar con comodidad y claridad.
               </p>
 
               <p className="text-muted-foreground text-lg leading-relaxed">
-                No vendemos directamente desde la web: cada consulta es personal,
-                directa y transparente vía WhatsApp.
+                No vendemos directamente desde la web: cada consulta es
+                personal, directa y transparente vía WhatsApp.
               </p>
             </div>
           </motion.div>
@@ -680,7 +673,8 @@ const features = [
               </h2>
 
               <p className="text-muted-foreground text-lg mb-8">
-                Explorá el catálogo completo y consultá por tus figuras favoritas.
+                Explorá el catálogo completo y consultá por tus figuras
+                favoritas.
               </p>
 
               <motion.button
