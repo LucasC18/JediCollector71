@@ -141,15 +141,14 @@ const Catalog = () => {
   const totalPages = Math.max(1, Math.ceil(total / PRODUCTS_PER_PAGE))
 
   /* ======================= FILTERS ======================= */
-  const visibleCollections = useMemo(
-    () => collections.filter((col) => allFilteredProducts.some((p) => p.collection === col.slug)),
-    [collections, allFilteredProducts]
-  )
+const visibleCollections = collections.filter((col) =>
+  allFilteredProducts.some((p) => p.collectionSlug === col.slug)
+)
 
-  const visibleCategories = useMemo(
-    () => categories.filter((cat) => allFilteredProducts.some((p) => p.category === cat.slug)),
-    [categories, allFilteredProducts]
-  )
+const visibleCategories = categories.filter((cat) =>
+  allFilteredProducts.some((p) => p.categorySlug === cat.slug)
+)
+
 
   /* ======================= HANDLERS ======================= */
   const handleCategoryChange = (slug: string | null) => {
