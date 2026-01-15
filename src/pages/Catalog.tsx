@@ -105,8 +105,14 @@ const useProducts = (filters: FilterState) => {
 
 /* ================================
    SLUG METADATA (UX LOGIC)
+   ✅ Categories depend on: search + inStock + collection
+   ✅ Collections depend on: search + inStock + category
 ================================ */
-const useCategorySlugs = (filters: { search: string; inStock: boolean }) => {
+const useCategorySlugs = (filters: {
+  search: string
+  inStock: boolean
+  collection: string | null
+}) => {
   const [slugs, setSlugs] = useState<Set<string>>(new Set())
 
   useEffect(() => {
@@ -119,12 +125,16 @@ const useCategorySlugs = (filters: { search: string; inStock: boolean }) => {
       }
       setSlugs(s)
     })
-  }, [filters.search, filters.inStock])
+  }, [filters.search, filters.inStock, filters.collection])
 
   return slugs
 }
 
-const useCollectionSlugs = (filters: { category: string | null; search: string; inStock: boolean }) => {
+const useCollectionSlugs = (filters: {
+  category: string | null
+  search: string
+  inStock: boolean
+}) => {
   const [slugs, setSlugs] = useState<Set<string>>(new Set())
 
   useEffect(() => {
@@ -187,20 +197,28 @@ const Catalog = () => {
   const { products, total, loading } = useProducts(filters)
   const { categories, collections } = useMetadata()
 
-  // 🔹 Categorías NO dependen de colección
-  const categorySlugs = useCategorySlugs({ search: debouncedSearch, inStock })
+  // ✅ Categories now depend on collection too (fix for "Duplo + SIMIL = 0")
+  const categorySlugs = useCategorySlugs({
+    search: debouncedSearch,
+    inStock,
+    collection,
+  })
 
-  // 🔹 Colecciones SÍ dependen de categoría
-  const collectionSlugs = useCollectionSlugs({ category, search: debouncedSearch, inStock })
+  // ✅ Collections depend on category (OK)
+  const collectionSlugs = useCollectionSlugs({
+    category,
+    search: debouncedSearch,
+    inStock,
+  })
 
-  // ✅ SOLO categorías que tienen al menos 1 producto
-  const categoriesWithState = useMemo(
+  // ✅ Only show categories that have at least 1 product in the CURRENT CONTEXT
+  const categoriesFiltered = useMemo(
     () => categories.filter(c => categorySlugs.has(c.slug)),
     [categories, categorySlugs]
   )
 
-  // ✅ SOLO colecciones que tienen al menos 1 producto
-  const collectionsWithState = useMemo(
+  // ✅ Only show collections that have at least 1 product in the CURRENT CONTEXT
+  const collectionsFiltered = useMemo(
     () => collections.filter(c => collectionSlugs.has(c.slug)),
     [collections, collectionSlugs]
   )
@@ -217,6 +235,19 @@ const Catalog = () => {
     })
   }, [location.search])
 
+  // Reset page when major filters change
+  useEffect(() => {
+    setPage(1)
+  }, [debouncedSearch, category, collection, inStock])
+
+  const clearFilters = () => {
+    setSearch("")
+    setCategory(null)
+    setCollection(null)
+    setInStock(false)
+    setPage(1)
+  }
+
   return (
     <div className="min-h-screen bg-slate-950">
       <Navbar onCartClick={() => setCartOpen(true)} />
@@ -226,20 +257,18 @@ const Catalog = () => {
         <SearchBar value={search} onChange={setSearch} />
 
         <Filters
-          categories={categoriesWithState}
-          collections={collectionsWithState}
+          categories={categoriesFiltered}
+          collections={collectionsFiltered}
           selectedCategory={category}
           selectedCollection={collection}
           showOnlyInStock={inStock}
           onCategoryChange={setCategory}
-          onCollectionChange={(v) => { setCollection(v); setCategory(null) }}
-          onStockFilterChange={setInStock}
-          onClearFilters={() => {
-            setSearch("")
-            setCategory(null)
-            setCollection(null)
-            setInStock(false)
+          onCollectionChange={(v) => {
+            setCollection(v)
+            setCategory(null) // keep your original rule
           }}
+          onStockFilterChange={setInStock}
+          onClearFilters={clearFilters}
         />
 
         <Badge>{total} productos</Badge>
@@ -253,12 +282,7 @@ const Catalog = () => {
             <ProductGrid
               products={products}
               onNavigate={(id) => navigate(`/producto/${id}`)}
-              onClearFilters={() => {
-                setSearch("")
-                setCategory(null)
-                setCollection(null)
-                setInStock(false)
-              }}
+              onClearFilters={clearFilters}
             />
           )}
         </AnimatePresence>
