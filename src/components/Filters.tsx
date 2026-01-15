@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
@@ -8,8 +8,6 @@ import {
   Layers,
   X,
   Package,
-  Filter,
-  Sparkles,
   Check,
 } from "lucide-react"
 
@@ -46,29 +44,26 @@ interface FilterBadgeProps {
   label: string
   isSelected: boolean
   onClick: () => void
-  icon?: React.ReactNode
 }
 
-const FilterBadge = ({ label, isSelected, onClick, icon }: FilterBadgeProps) => {
+const FilterBadge = ({ label, isSelected, onClick }: FilterBadgeProps) => {
   return (
     <motion.button
-      whileHover={{ scale: 1.05, y: -3 }}
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
       className={`
-        relative px-5 py-2.5 rounded-full text-sm font-bold
-        transition-all duration-300 border-2 overflow-hidden
+        min-h-[44px] px-6 py-3 rounded-full text-sm font-bold
+        transition-all duration-200 border
         ${
           isSelected
-            ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white border-purple-500 shadow-lg"
-            : "bg-gradient-to-br from-gray-900/80 to-gray-800/80 text-purple-200 border-purple-500/30 hover:border-purple-400/60"
+            ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white border-purple-400 shadow-md"
+            : "bg-black/40 text-purple-200 border-purple-500/30 hover:bg-purple-900/30"
         }
       `}
     >
-      <span className="flex items-center gap-2 relative z-10">
-        {icon}
+      <span className="flex items-center gap-2">
         {label}
-        {isSelected && <Check className="w-3.5 h-3.5" />}
+        {isSelected && <Check className="w-4 h-4" />}
       </span>
     </motion.button>
   )
@@ -98,13 +93,13 @@ const Filters = ({
     (showOnlyInStock ? 1 : 0)
 
   return (
-    <motion.div className="space-y-8">
+    <div className="space-y-8">
       {/* HEADER */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-purple-400">Filtros</h2>
+          <h2 className="text-xl font-bold text-purple-300">Filtros</h2>
           {hasActiveFilters && (
-            <p className="text-xs text-purple-300">
+            <p className="text-xs text-purple-200">
               {activeFiltersCount} activos
             </p>
           )}
@@ -115,7 +110,7 @@ const Filters = ({
             variant="ghost"
             size="sm"
             onClick={onClearFilters}
-            className="text-red-400"
+            className="text-red-400 min-h-[40px]"
           >
             <X className="w-4 h-4 mr-1" />
             Limpiar
@@ -126,11 +121,11 @@ const Filters = ({
       {/* ================= CATEGORIAS ================= */}
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <Tag className="w-4 h-4 text-purple-400" />
-          <h3 className="text-sm font-bold text-purple-400">Categorías</h3>
+          <Tag className="w-4 h-4 text-purple-300" />
+          <h3 className="text-sm font-bold text-purple-300">Categorías</h3>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-3">
           <FilterBadge
             label="Todas"
             isSelected={!selectedCategory}
@@ -151,11 +146,11 @@ const Filters = ({
       {/* ================= COLECCIONES ================= */}
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <Layers className="w-4 h-4 text-pink-400" />
-          <h3 className="text-sm font-bold text-pink-400">Colecciones</h3>
+          <Layers className="w-4 h-4 text-pink-300" />
+          <h3 className="text-sm font-bold text-pink-300">Colecciones</h3>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-3">
           <FilterBadge
             label="Todas"
             isSelected={!selectedCollection}
@@ -174,7 +169,7 @@ const Filters = ({
       </div>
 
       {/* ================= STOCK ================= */}
-      <div className="p-4 rounded-xl border border-purple-500/20 bg-black/30 flex items-center justify-between">
+      <div className="p-5 rounded-xl border border-purple-500/30 bg-black/40 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Package className="w-5 h-5 text-emerald-400" />
           <div>
@@ -189,7 +184,7 @@ const Filters = ({
 
         <Switch checked={showOnlyInStock} onCheckedChange={onStockFilterChange} />
       </div>
-    </motion.div>
+    </div>
   )
 }
 

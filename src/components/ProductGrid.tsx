@@ -4,8 +4,8 @@ import { Product } from "@/types/product"
 
 interface ProductGridProps {
   products: Product[]
-  onClearFilters: () => void
-  onNavigate: (id: string) => void
+  onClearFilters?: () => void
+  onNavigate?: (id: string) => void
 }
 
 const ProductGrid = ({ products, onClearFilters, onNavigate }: ProductGridProps) => {
@@ -15,12 +15,15 @@ const ProductGrid = ({ products, onClearFilters, onNavigate }: ProductGridProps)
         <p className="text-muted-foreground text-lg">
           No se encontraron productos con los filtros seleccionados.
         </p>
-        <button
-          onClick={onClearFilters}
-          className="text-primary underline hover:text-primary/80 transition"
-        >
-          Limpiar filtros
-        </button>
+
+        {onClearFilters && (
+          <button
+            onClick={onClearFilters}
+            className="text-primary underline hover:text-primary/80 transition"
+          >
+            Limpiar filtros
+          </button>
+        )}
       </div>
     )
   }

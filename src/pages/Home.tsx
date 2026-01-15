@@ -3,9 +3,11 @@ import { motion } from "framer-motion"
 import { Link } from "react-router-dom"
 import Navbar from "@/components/Navbar"
 import CartDrawer from "@/components/CartDrawer"
-import { Sparkles, ChevronDown, ArrowRight } from "lucide-react"
+import { Sparkles, ChevronDown, ArrowRight, Star } from "lucide-react"
 import heroImage from "@/assets/hero-starwars.jpg"
 import { apiFetch } from "@/config/api"
+import { Product } from "@/types/product"
+import ProductGrid from "@/components/ProductGrid"
 
 interface Collection {
   id: string
@@ -15,8 +17,12 @@ interface Collection {
 
 const Home = () => {
   const [isCartOpen, setIsCartOpen] = useState(false)
+
   const [collections, setCollections] = useState<Collection[]>([])
+  const [featured, setFeatured] = useState<Product[]>([])
+
   const [isLoadingCollections, setIsLoadingCollections] = useState(true)
+  const [isLoadingFeatured, setIsLoadingFeatured] = useState(true)
 
   /* =======================
      Load collections
@@ -26,8 +32,7 @@ const Home = () => {
       try {
         const res = await apiFetch<Collection[]>("/v1/collections")
         setCollections(res || [])
-      } catch (err) {
-        console.error("Error cargando colecciones", err)
+      } catch {
         setCollections([])
       } finally {
         setIsLoadingCollections(false)
@@ -37,8 +42,28 @@ const Home = () => {
     loadCollections()
   }, [])
 
-  const scrollToCollections = () => {
-    document.getElementById("destacados")?.scrollIntoView({ behavior: "smooth" })
+  /* =======================
+     Load featured products
+  ======================= */
+  useEffect(() => {
+    async function loadFeatured() {
+      try {
+        const res = await apiFetch<{ items: Product[] }>(
+          "/v1/products?featured=true&limit=8"
+        )
+        setFeatured(res.items || [])
+      } catch {
+        setFeatured([])
+      } finally {
+        setIsLoadingFeatured(false)
+      }
+    }
+
+    loadFeatured()
+  }, [])
+
+  const scrollToFeatured = () => {
+    document.getElementById("featured")?.scrollIntoView({ behavior: "smooth" })
   }
 
   return (
@@ -46,7 +71,7 @@ const Home = () => {
       <Navbar onCartClick={() => setIsCartOpen(true)} />
 
       {/* ================= HERO ================= */}
-      <section className="relative h-screen overflow-hidden">
+      <section className="relative min-h-[100svh] overflow-hidden">
         <motion.div
           initial={{ scale: 1.1 }}
           animate={{ scale: 1 }}
@@ -58,8 +83,9 @@ const Home = () => {
             alt="Hero"
             className="w-full h-full object-cover"
           />
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-background/80" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-transparent to-background/70" />
         </motion.div>
 
         <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-4">
@@ -85,21 +111,13 @@ const Home = () => {
               encontrá tu próximo favorito.
             </p>
 
-            {/* ===== HERO COLLECTION BUTTONS ===== */}
             {!isLoadingCollections && collections.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-                className="flex flex-wrap justify-center gap-4 mb-10"
-              >
+              <motion.div className="flex flex-wrap justify-center gap-4 mb-10">
                 {collections.slice(0, 2).map((c) => (
                   <Link
                     key={c.id}
                     to={`/catalogo?collection=${c.slug}`}
-                    className="px-10 py-5 rounded-xl font-display font-bold text-lg
-                               glass-card neon-border hover-glow transition-all
-                               text-primary"
+                    className="px-10 py-6 min-h-[52px] rounded-xl font-display font-bold text-lg glass-card neon-border hover-glow text-primary"
                   >
                     {c.name}
                   </Link>
@@ -108,43 +126,50 @@ const Home = () => {
             )}
 
             <motion.button
-              onClick={scrollToCollections}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-8 py-4 bg-primary text-primary-foreground font-display font-bold text-lg rounded-lg neon-glow hover:bg-primary/90 transition-colors"
+              onClick={scrollToFeatured}
+              className="px-8 py-6 min-h-[52px] bg-primary text-primary-foreground font-bold rounded-lg neon-glow"
             >
-              Ver Colecciones
+              Ver Destacados
             </motion.button>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.5 }}
-            className="absolute bottom-8"
-          >
-            <motion.div
-              animate={{ y: [0, 10, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="flex flex-col items-center gap-2 cursor-pointer"
-              onClick={scrollToCollections}
-            >
-              <span className="text-muted-foreground text-sm">Scroll</span>
-              <ChevronDown className="w-6 h-6 text-primary" />
-            </motion.div>
+          <motion.div className="absolute bottom-8">
+            <ChevronDown className="w-6 h-6 text-primary" />
           </motion.div>
         </div>
       </section>
 
-      {/* ================= CTA BOTTOM ================= */}
-      <main id="destacados" className="container mx-auto px-4 py-20 bg-grid text-center">
-        <Link
-          to="/catalogo"
-          className="inline-flex items-center gap-2 px-10 py-5 glass-card neon-border rounded-lg font-display font-semibold text-primary hover-glow transition-all"
-        >
-          Ver Catálogo Completo
-          <ArrowRight className="w-5 h-5" />
-        </Link>
+      {/* ================= FEATURED ================= */}
+      <main
+        id="featured"
+        className="container mx-auto px-4 py-20 bg-grid"
+      >
+        <div className="flex items-center gap-3 mb-10">
+          <Star className="text-yellow-400" />
+          <h2 className="text-2xl font-bold text-white">
+            Productos Destacados
+          </h2>
+        </div>
+
+        {isLoadingFeatured ? (
+          <div className="text-center py-20">Cargando…</div>
+        ) : featured.length > 0 ? (
+          <ProductGrid products={featured} />
+        ) : (
+          <div className="text-center text-muted-foreground">
+            No hay productos destacados todavía
+          </div>
+        )}
+
+        <div className="text-center mt-16">
+          <Link
+            to="/catalogo"
+            className="inline-flex items-center gap-2 px-10 py-5 glass-card neon-border rounded-lg font-semibold text-primary hover-glow"
+          >
+            Ver Catálogo Completo
+            <ArrowRight />
+          </Link>
+        </div>
       </main>
 
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />

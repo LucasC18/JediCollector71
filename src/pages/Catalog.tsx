@@ -1,6 +1,6 @@
-import { useEffect, useState, useTransition } from "react"
+import { useEffect, useMemo, useState, useTransition } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 
 import Navbar from "@/components/Navbar"
 import SearchBar from "@/components/SearchBar"
@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
 const PRODUCTS_PER_PAGE = 24
+const FILTERS_LIMIT = 1000 // para calcular categorías/colecciones sin depender de la página
 
 type Category = {
   id: string
@@ -31,6 +32,7 @@ type Collection = {
 
 const Catalog = () => {
   const navigate = useNavigate()
+  const location = useLocation()
 
   const [products, setProducts] = useState<Product[]>([])
   const [allFilteredProducts, setAllFilteredProducts] = useState<Product[]>([])
@@ -65,9 +67,29 @@ const Catalog = () => {
 
   /* ======================= LOAD META ======================= */
   useEffect(() => {
-    apiFetch<Category[]>("/v1/categories").then(setCategories)
-    apiFetch<Collection[]>("/v1/collections").then(setCollections)
+    apiFetch<Category[]>("/v1/categories").then(setCategories).catch(() => setCategories([]))
+    apiFetch<Collection[]>("/v1/collections").then(setCollections).catch(() => setCollections([]))
   }, [])
+
+  /* ======================= READ URL PARAMS (IMPORTANT) ======================= */
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const urlCategory = params.get("category")
+    const urlCollection = params.get("collection")
+    const urlSearch = params.get("search")
+
+    // Solo seteamos si vienen en URL (así no pisamos cambios del usuario)
+    startTransition(() => {
+      if (urlCollection !== null) setSelectedCollection(urlCollection || null)
+      if (urlCategory !== null) setSelectedCategory(urlCategory || null)
+      if (urlSearch !== null) {
+        setSearchQuery(urlSearch || "")
+        setDebouncedQuery(urlSearch || "")
+      }
+      setCurrentPage(1)
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search])
 
   /* ======================= FILTER PARAMS ======================= */
   const buildParams = (withPaging: boolean) => {
@@ -90,31 +112,43 @@ const Catalog = () => {
   useEffect(() => {
     setIsLoading(true)
 
-    apiFetch<{ items: Product[]; total: number }>(
-      `/v1/products?${buildParams(true)}`
-    )
+    apiFetch<{ items: Product[]; total: number }>(`/v1/products?${buildParams(true)}`)
       .then((res) => {
-        setProducts(res.items)
-        setTotal(res.total)
+        setProducts(res.items || [])
+        setTotal(res.total || 0)
+      })
+      .catch(() => {
+        setProducts([])
+        setTotal(0)
       })
       .finally(() => setIsLoading(false))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory, selectedCollection, debouncedQuery, showOnlyInStock, currentPage])
 
   /* ======================= LOAD PRODUCTS (FOR FILTERS) ======================= */
   useEffect(() => {
-    apiFetch<{ items: Product[] }>(`/v1/products?${buildParams(false)}`)
-      .then((res) => setAllFilteredProducts(res.items))
+    // Misma query, pero sin paginar, con limit alto (si backend lo limita por default)
+    const params = new URLSearchParams(buildParams(false))
+    params.set("limit", String(FILTERS_LIMIT))
+    params.set("page", "1")
+
+    apiFetch<{ items: Product[] }>(`/v1/products?${params.toString()}`)
+      .then((res) => setAllFilteredProducts(res.items || []))
+      .catch(() => setAllFilteredProducts([]))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory, selectedCollection, debouncedQuery, showOnlyInStock])
 
   const totalPages = Math.max(1, Math.ceil(total / PRODUCTS_PER_PAGE))
 
   /* ======================= FILTERS ======================= */
-  const visibleCollections = collections.filter((col) =>
-    allFilteredProducts.some((p) => p.collection === col.slug)
+  const visibleCollections = useMemo(
+    () => collections.filter((col) => allFilteredProducts.some((p) => p.collection === col.slug)),
+    [collections, allFilteredProducts]
   )
 
-  const visibleCategories = categories.filter((cat) =>
-    allFilteredProducts.some((p) => p.category === cat.slug)
+  const visibleCategories = useMemo(
+    () => categories.filter((cat) => allFilteredProducts.some((p) => p.category === cat.slug)),
+    [categories, allFilteredProducts]
   )
 
   /* ======================= HANDLERS ======================= */
@@ -181,11 +215,19 @@ const Catalog = () => {
 
         {totalPages > 1 && (
           <motion.div className="flex justify-center gap-2 mt-12">
-            <Button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)}>
+            <Button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(currentPage - 1)}
+            >
               <ChevronLeft />
             </Button>
-            <span>{currentPage} / {totalPages}</span>
-            <Button disabled={currentPage === totalPages} onClick={() => setCurrentPage(currentPage + 1)}>
+            <span>
+              {currentPage} / {totalPages}
+            </span>
+            <Button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(currentPage + 1)}
+            >
               <ChevronRight />
             </Button>
           </motion.div>
