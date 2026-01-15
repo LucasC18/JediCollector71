@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, useTransition, useCallback, useRef } from "react"
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
+import { useEffect, useMemo, useState, useTransition } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { useNavigate, useLocation } from "react-router-dom"
 
 import Navbar from "@/components/Navbar"
@@ -47,7 +47,7 @@ interface FilterState {
    CONSTANTS
 ================================ */
 const PRODUCTS_PER_PAGE = 24
-const METADATA_LIMIT = 100000  // <<<<<<<<<<<<<<<<<<< CLAVE
+const METADATA_LIMIT = 100000
 const DEBOUNCE_DELAY = 300
 const NAVBAR_HEIGHT = 80
 
@@ -56,7 +56,6 @@ const NAVBAR_HEIGHT = 80
 ================================ */
 const buildQueryParams = (filters: Partial<FilterState>, withPaging = true) => {
   const p = new URLSearchParams()
-
   if (filters.category) p.set("category", filters.category)
   if (filters.collection) p.set("collection", filters.collection)
   if (filters.search) p.set("search", filters.search)
@@ -69,7 +68,6 @@ const buildQueryParams = (filters: Partial<FilterState>, withPaging = true) => {
     p.set("page", "1")
     p.set("limit", String(METADATA_LIMIT))
   }
-
   return p.toString()
 }
 
@@ -104,26 +102,24 @@ const useProducts = (filters: FilterState) => {
 }
 
 /* ================================
-   METADATA FROM PRODUCTS (FIX REAL)
+   METADATA FROM PRODUCTS
 ================================ */
 const useProductSlugs = (filters: Omit<FilterState, "page">) => {
   const [categorySlugs, setCategorySlugs] = useState<Set<string>>(new Set())
   const [collectionSlugs, setCollectionSlugs] = useState<Set<string>>(new Set())
 
   useEffect(() => {
-    const qs = buildQueryParams(filters, false)
+    apiFetch<ProductsApiResponse>(`/v1/products?${buildQueryParams(filters, false)}`).then(r => {
+      const cats = new Set<string>()
+      const cols = new Set<string>()
 
-    apiFetch<ProductsApiResponse>(`/v1/products?${qs}`).then(res => {
-      const cat = new Set<string>()
-      const col = new Set<string>()
-
-      for (const p of res.items || []) {
-        if (p.categorySlug) cat.add(p.categorySlug)
-        if (p.collectionSlug) col.add(p.collectionSlug)
+      for (const p of r.items || []) {
+        if (p.categorySlug) cats.add(p.categorySlug)
+        if (p.collectionSlug) cols.add(p.collectionSlug)
       }
 
-      setCategorySlugs(cat)
-      setCollectionSlugs(col)
+      setCategorySlugs(cats)
+      setCollectionSlugs(cols)
     })
   }, [filters])
 
@@ -131,7 +127,7 @@ const useProductSlugs = (filters: Omit<FilterState, "page">) => {
 }
 
 /* ================================
-   METADATA
+   STATIC METADATA
 ================================ */
 const useMetadata = () => {
   const [categories, setCategories] = useState<Category[]>([])
@@ -174,7 +170,6 @@ const Catalog = () => {
 
   const { products, total, loading } = useProducts(filters)
   const { categories, collections } = useMetadata()
-
   const { categorySlugs, collectionSlugs } = useProductSlugs({
     category,
     collection,
@@ -182,13 +177,14 @@ const Catalog = () => {
     inStock,
   })
 
-  const visibleCategories = useMemo(
-    () => categories.filter(c => categorySlugs.has(c.slug)),
+  // 👇 PASAMOS TODAS, NO SOLO LAS VISIBLES
+  const categoriesWithState = useMemo(
+    () => categories.map(c => ({ ...c, hasProducts: categorySlugs.has(c.slug) })),
     [categories, categorySlugs]
   )
 
-  const visibleCollections = useMemo(
-    () => collections.filter(c => collectionSlugs.has(c.slug)),
+  const collectionsWithState = useMemo(
+    () => collections.map(c => ({ ...c, hasProducts: collectionSlugs.has(c.slug) })),
     [collections, collectionSlugs]
   )
 
@@ -213,8 +209,8 @@ const Catalog = () => {
         <SearchBar value={search} onChange={setSearch} />
 
         <Filters
-          categories={visibleCategories}
-          collections={visibleCollections}
+          categories={categoriesWithState}
+          collections={collectionsWithState}
           selectedCategory={category}
           selectedCollection={collection}
           showOnlyInStock={inStock}
