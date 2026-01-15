@@ -8,7 +8,7 @@ import { Product } from "@/types/product";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ArrowLeft, PackageX, X, ImageOff, ZoomIn } from "lucide-react";
+import { Loader2, ArrowLeft, PackageX, X, ImageOff, ZoomIn, Sparkles, ShoppingBag, CheckCircle2 } from "lucide-react";
 
 interface ProductDetailProps {
   id?: string;
@@ -79,14 +79,6 @@ const extractProductFromResponse = (res: ProductApiResponse): Product | null => 
   return data ?? null;
 };
 
-const formatPrice = (price: number | undefined): string => {
-  if (!price) return "Consultar precio";
-  return new Intl.NumberFormat("es-AR", {
-    style: "currency",
-    currency: "ARS",
-  }).format(price);
-};
-
 const getSafeAreaStyle = (): React.CSSProperties => {
   return {
     paddingTop: "env(safe-area-inset-top)",
@@ -119,13 +111,11 @@ const useScrollLock = () => {
   const lockScroll = useCallback(() => {
     if (isLockedRef.current) return;
 
-    // Guardar posición actual
     scrollPositionRef.current = {
       x: window.scrollX || window.pageXOffset,
       y: window.scrollY || window.pageYOffset,
     };
 
-    // Aplicar estilos para bloquear scroll
     const scrollbarWidth = getScrollbarWidth();
     
     document.body.style.overflow = "hidden";
@@ -135,12 +125,10 @@ const useScrollLock = () => {
     document.body.style.right = "0";
     document.body.style.width = "100%";
     
-    // Compensar scrollbar en desktop
     if (scrollbarWidth > 0) {
       document.body.style.paddingRight = `${scrollbarWidth}px`;
     }
 
-    // Prevenir scroll en iOS Safari
     const html = document.documentElement;
     html.style.overflow = "hidden";
     html.style.position = "fixed";
@@ -153,7 +141,6 @@ const useScrollLock = () => {
   const unlockScroll = useCallback(() => {
     if (!isLockedRef.current) return;
 
-    // Remover estilos del body
     document.body.style.overflow = "";
     document.body.style.position = "";
     document.body.style.top = "";
@@ -162,14 +149,12 @@ const useScrollLock = () => {
     document.body.style.width = "";
     document.body.style.paddingRight = "";
 
-    // Remover estilos del html
     const html = document.documentElement;
     html.style.overflow = "";
     html.style.position = "";
     html.style.width = "";
     html.style.height = "";
 
-    // Restaurar posición
     window.scrollTo(scrollPositionRef.current.x, scrollPositionRef.current.y);
 
     isLockedRef.current = false;
@@ -222,7 +207,6 @@ const useFocusTrap = (isActive: boolean, containerRef: React.RefObject<HTMLEleme
     container.addEventListener("keydown", handleTabKey);
     container.addEventListener("keydown", handleEscape);
     
-    // Auto-focus en el primer elemento
     setTimeout(() => {
       firstElement?.focus();
     }, 100);
@@ -304,7 +288,6 @@ const useProductFetch = (productId: string | undefined) => {
       return;
     }
 
-    // Cancelar request anterior si existe
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
@@ -330,12 +313,10 @@ const useProductFetch = (productId: string | undefined) => {
       setProduct(productData);
       setError(null);
     } catch (err: unknown) {
-      // Si es un AbortError, ignorar (request cancelado)
       if (isAbortError(err)) {
         return;
       }
       
-      // Extraer mensaje de error de forma segura
       const errorMessage = extractErrorMessage(err);
       setError(errorMessage);
       setProduct(null);
@@ -383,13 +364,25 @@ const useViewportHeight = () => {
    SUB-COMPONENTS
 ================================= */
 const ProductSkeleton = () => (
-  <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 animate-pulse">
-    <div className="bg-white rounded-2xl shadow-xl h-[300px] sm:h-[400px] lg:h-[500px]" />
+  <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
+    <motion.div 
+      className="relative bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200 rounded-3xl h-[350px] sm:h-[450px] lg:h-[550px] overflow-hidden"
+      animate={{ backgroundPosition: ["0% 0%", "100% 100%", "0% 0%"] }}
+      transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+      style={{ backgroundSize: "200% 200%" }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent" />
+    </motion.div>
     <div className="space-y-6">
-      <div className="h-12 bg-slate-200 rounded-lg w-3/4" />
-      <div className="h-8 bg-slate-200 rounded-lg w-1/4" />
-      <div className="h-32 bg-slate-200 rounded-xl" />
-      <div className="h-16 bg-slate-200 rounded-xl" />
+      {[12, 8, 32, 16].map((h, i) => (
+        <motion.div
+          key={i}
+          className="bg-slate-200 rounded-2xl"
+          style={{ height: `${h * 4}px` }}
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
+        />
+      ))}
     </div>
   </div>
 );
@@ -404,40 +397,59 @@ const ErrorState = ({
   onRetry?: () => void;
 }) => (
   <div className="text-center py-20 sm:py-32">
-    <div className="bg-white rounded-2xl shadow-lg p-8 sm:p-12 max-w-md mx-auto">
-      <PackageX className="w-20 h-20 sm:w-24 sm:h-24 mx-auto text-red-500 mb-6" />
-      <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-4 leading-tight">
+    <motion.div 
+      className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl shadow-2xl p-8 sm:p-12 max-w-md mx-auto"
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+    >
+      <PackageX className="w-20 h-20 sm:w-24 sm:h-24 mx-auto text-red-400 mb-6" />
+      <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4 leading-tight">
         {title}
       </h2>
-      <p className="text-slate-600 text-lg sm:text-xl leading-relaxed mb-6">
+      <p className="text-slate-300 text-lg sm:text-xl leading-relaxed mb-6">
         {message}
       </p>
       {onRetry && (
         <Button
           onClick={onRetry}
           size="lg"
-          className="min-h-[52px] px-8 text-lg font-semibold rounded-xl touch-manipulation"
+          className="min-h-[52px] px-8 text-lg font-semibold rounded-xl"
         >
           Reintentar
         </Button>
       )}
-    </div>
+    </motion.div>
   </div>
 );
 
 const StockBadge = ({ inStock }: { inStock: boolean }) => {
   if (inStock) {
     return (
-      <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 text-base sm:text-lg font-semibold rounded-lg shadow-md">
-        ✓ Disponible en stock
-      </Badge>
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-6 py-3 text-base sm:text-lg font-bold rounded-full shadow-lg shadow-emerald-500/30"
+      >
+        <motion.div
+          animate={{ scale: [1, 1.2, 1] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          <CheckCircle2 className="w-5 h-5" />
+        </motion.div>
+        Disponible en Stock
+      </motion.div>
     );
   }
 
   return (
-    <Badge className="bg-red-500 hover:bg-red-600 text-white px-5 py-2.5 text-base sm:text-lg font-semibold rounded-lg shadow-md">
-      ✕ Sin stock
-    </Badge>
+    <motion.div
+      initial={{ scale: 0.9, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500 to-rose-600 text-white px-6 py-3 text-base sm:text-lg font-bold rounded-full shadow-lg shadow-red-500/30"
+    >
+      <X className="w-5 h-5" />
+      Sin Stock
+    </motion.div>
   );
 };
 
@@ -459,44 +471,57 @@ const ProductImage = ({
 
   if (imageState.isLoading && !imageError) {
     return (
-      <div className="w-full h-[300px] sm:h-[400px] lg:h-[500px] flex items-center justify-center bg-slate-100 rounded-2xl">
-        <Loader2 className="w-12 h-12 sm:w-16 sm:h-16 animate-spin text-slate-400" />
+      <div className="w-full h-[350px] sm:h-[450px] lg:h-[550px] flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-3xl relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 animate-pulse" />
+        <Loader2 className="w-16 h-16 animate-spin text-blue-500 relative z-10" />
       </div>
     );
   }
 
   if (imageState.hasError || imageError) {
     return (
-      <div className="w-full h-[300px] sm:h-[400px] lg:h-[500px] flex flex-col items-center justify-center text-slate-400 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-300">
-        <ImageOff className="w-16 h-16 sm:w-20 sm:h-20 mb-4" />
-        <p className="text-lg sm:text-xl font-medium">Sin imagen disponible</p>
+      <div className="w-full h-[350px] sm:h-[450px] lg:h-[550px] flex flex-col items-center justify-center text-slate-400 bg-slate-100 rounded-3xl border-2 border-dashed border-slate-300">
+        <ImageOff className="w-20 h-20 mb-4" />
+        <p className="text-xl font-semibold">Sin imagen disponible</p>
       </div>
     );
   }
 
   return (
-    <button
+    <motion.button
       onClick={onClick}
-      className="relative w-full group cursor-pointer focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98] transition-all rounded-2xl overflow-hidden bg-white shadow-xl"
+      className="relative w-full group cursor-pointer focus:outline-none rounded-3xl overflow-hidden bg-white shadow-2xl border border-slate-200/50"
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
       aria-label="Ver imagen en tamaño completo"
       type="button"
     >
-      <img
-        src={src}
-        alt={alt}
-        onError={handleImageError}
-        className="w-full h-[300px] sm:h-[400px] lg:h-[500px] object-contain p-6 sm:p-8"
-        loading="lazy"
-        decoding="async"
-      />
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" />
       
-      {/* Overlay con icono de zoom */}
-      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 group-active:bg-black/10 transition-colors flex items-center justify-center">
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 backdrop-blur-sm rounded-full p-3 sm:p-4 shadow-lg">
-          <ZoomIn className="w-6 h-6 sm:w-8 sm:h-8 text-slate-700" />
-        </div>
+      <div className="relative">
+        <img
+          src={src}
+          alt={alt}
+          onError={handleImageError}
+          className="w-full h-[350px] sm:h-[450px] lg:h-[550px] object-contain p-8"
+          loading="lazy"
+          decoding="async"
+        />
+        
+        <motion.div 
+          className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 flex items-end justify-center pb-8"
+          transition={{ duration: 0.3 }}
+        >
+          <div className="bg-white/95 backdrop-blur-md rounded-full px-6 py-3 flex items-center gap-2 shadow-xl">
+            <ZoomIn className="w-5 h-5 text-slate-700" />
+            <span className="text-sm font-bold text-slate-700">Ver en grande</span>
+          </div>
+        </motion.div>
       </div>
-    </button>
+
+      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/40 to-transparent blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+    </motion.button>
   );
 };
 
@@ -538,7 +563,6 @@ const ImageModal = ({
     [onClose]
   );
 
-  // Prevenir scroll con touch
   useEffect(() => {
     if (!isOpen) return;
 
@@ -561,7 +585,7 @@ const ImageModal = ({
     <AnimatePresence>
       <motion.div
         ref={modalRef}
-        className="fixed inset-0 bg-black/95 flex items-center justify-center z-[9999] p-4 sm:p-6"
+        className="fixed inset-0 bg-black/95 flex items-center justify-center z-[9999] p-4 sm:p-6 backdrop-blur-sm"
         style={{
           ...getSafeAreaStyle(),
           height: "100dvh",
@@ -591,17 +615,17 @@ const ImageModal = ({
           />
         </motion.div>
 
-        {/* Close button - Touch optimizado */}
-        <Button
-          className="fixed top-4 right-4 sm:top-6 sm:right-6 min-h-[52px] min-w-[52px] sm:min-h-[56px] sm:min-w-[56px] rounded-full bg-white/20 hover:bg-white/30 active:bg-white/40 backdrop-blur-md text-white shadow-2xl border-2 border-white/30 transition-all z-10 touch-manipulation"
+        <motion.button
+          className="fixed top-4 right-4 sm:top-6 sm:right-6 min-h-[52px] min-w-[52px] sm:min-h-[56px] sm:min-w-[56px] rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white shadow-2xl border-2 border-white/30 flex items-center justify-center"
           onClick={onClose}
+          whileHover={{ scale: 1.1, rotate: 90 }}
+          whileTap={{ scale: 0.9 }}
           aria-label="Cerrar vista ampliada"
           type="button"
         >
           <X className="w-6 h-6 sm:w-7 sm:h-7" strokeWidth={2.5} />
-        </Button>
+        </motion.button>
 
-        {/* Hint para cerrar */}
         <div className="fixed bottom-6 left-0 right-0 text-center px-4 sm:bottom-8 pointer-events-none">
           <motion.p
             className="text-white/90 text-sm sm:text-base font-medium bg-black/40 backdrop-blur-sm rounded-full px-6 py-3 inline-block"
@@ -636,7 +660,6 @@ const AddToCartButton = ({
     setIsAdding(true);
     onAdd(product);
 
-    // Feedback visual
     setTimeout(() => {
       setIsAdding(false);
     }, 600);
@@ -645,16 +668,59 @@ const AddToCartButton = ({
   const isDisabled = !product.inStock || inCart || isAdding;
 
   return (
-    <Button
-      size="lg"
+    <motion.button
       disabled={isDisabled}
       onClick={handleClick}
-      className="w-full min-h-[56px] sm:min-h-[64px] text-lg sm:text-xl font-bold rounded-xl shadow-lg hover:shadow-xl active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed touch-manipulation"
+      className={`
+        relative w-full min-h-[64px] sm:min-h-[72px] text-xl font-bold rounded-2xl shadow-2xl
+        overflow-hidden group
+        ${isDisabled 
+          ? 'bg-slate-300 cursor-not-allowed' 
+          : 'bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:shadow-purple-500/50'
+        }
+        disabled:opacity-60 transition-all duration-300
+      `}
+      whileHover={!isDisabled ? { scale: 1.02, y: -2 } : {}}
+      whileTap={!isDisabled ? { scale: 0.98 } : {}}
       aria-label={inCart ? "Producto agregado" : "Agregar producto a consulta"}
     >
-      {isAdding && <Loader2 className="w-5 h-5 mr-2 animate-spin" />}
-      {inCart ? "✓ Agregado a consulta" : "Agregar a consulta"}
-    </Button>
+      {!isDisabled && (
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600"
+          animate={{ x: ['-100%', '100%'] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+        />
+      )}
+
+      {!isDisabled && (
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 blur-xl opacity-50 group-hover:opacity-75 transition-opacity" />
+      )}
+
+      <span className="relative z-10 flex items-center justify-center gap-3 text-white">
+        {isAdding && <Loader2 className="w-6 h-6 animate-spin" />}
+        {inCart ? (
+          <>
+            <CheckCircle2 className="w-6 h-6" />
+            Agregado a Consulta
+          </>
+        ) : (
+          <>
+            <ShoppingBag className="w-6 h-6" />
+            Agregar a Consulta
+          </>
+        )}
+      </span>
+
+      {!isDisabled && (
+        <motion.div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+          initial={{ opacity: 0, scale: 0 }}
+          whileHover={{ opacity: 1, scale: 1 }}
+        >
+          <Sparkles className="w-8 h-8 text-yellow-300" />
+        </motion.div>
+      )}
+    </motion.button>
   );
 };
 
@@ -711,7 +777,6 @@ const ProductDetail = ({
     onBack: handleBack,
   });
 
-  // Precargar imagen en background
   useEffect(() => {
     if (product?.image) {
       const img = new Image();
@@ -719,33 +784,60 @@ const ProductDetail = ({
     }
   }, [product]);
 
-  /* ================================
-     RENDER
-  ================================= */
   return (
     <div 
-      className="bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50"
+      className="bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 relative overflow-hidden"
       style={{
         ...getSafeAreaStyle(),
         minHeight: "100dvh",
       }}
     >
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
-        {/* BACK BUTTON - Touch Friendly */}
-        <Button
-          variant="ghost"
+      {/* Animated background effects */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"
+          animate={{ 
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.5, 0.3],
+            x: [0, 50, 0],
+            y: [0, 30, 0]
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"
+          animate={{ 
+            scale: [1, 1.3, 1],
+            opacity: [0.3, 0.5, 0.3],
+            x: [0, -50, 0],
+            y: [0, -30, 0]
+          }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute top-1/2 left-1/2 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl"
+          animate={{ 
+            scale: [1, 1.1, 1],
+            opacity: [0.2, 0.4, 0.2]
+          }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </div>
+
+      <main className="relative max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+        <motion.button
           onClick={handleBack}
-          className="mb-6 sm:mb-8 gap-2 min-h-[52px] px-5 text-base sm:text-lg font-semibold hover:bg-slate-200 active:bg-slate-300 transition-all rounded-xl shadow-sm hover:shadow-md touch-manipulation"
+          className="mb-6 sm:mb-8 flex items-center gap-3 px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-white font-semibold hover:bg-white/20 transition-all shadow-lg"
+          whileHover={{ scale: 1.05, x: -5 }}
+          whileTap={{ scale: 0.95 }}
           aria-label="Volver atrás"
         >
           <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.5} />
           Volver
-        </Button>
+        </motion.button>
 
-        {/* LOADING STATE */}
         {isLoading && <ProductSkeleton />}
 
-        {/* ERROR STATE */}
         {!isLoading && error && (
           <ErrorState
             title="Error al cargar"
@@ -754,7 +846,6 @@ const ProductDetail = ({
           />
         )}
 
-        {/* NOT FOUND STATE */}
         {!isLoading && !error && !product && (
           <ErrorState
             title="Producto no encontrado"
@@ -762,7 +853,6 @@ const ProductDetail = ({
           />
         )}
 
-        {/* PRODUCT CONTENT */}
         {!isLoading && !error && product && (
           <motion.div
             className="grid lg:grid-cols-2 gap-8 lg:gap-12"
@@ -770,7 +860,6 @@ const ProductDetail = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
-            {/* IMAGE SECTION */}
             <div className="relative">
               {product.image ? (
                 <ProductImage
@@ -779,68 +868,86 @@ const ProductDetail = ({
                   onClick={handleOpenModal}
                 />
               ) : (
-                <div className="w-full h-[300px] sm:h-[400px] lg:h-[500px] flex flex-col items-center justify-center text-slate-400 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-300 shadow-xl">
-                  <ImageOff className="w-16 h-16 sm:w-20 sm:h-20 mb-4" />
-                  <p className="text-lg sm:text-xl font-medium">
-                    Sin imagen disponible
-                  </p>
+                <div className="w-full h-[350px] sm:h-[450px] lg:h-[550px] flex flex-col items-center justify-center text-slate-400 bg-slate-800/50 rounded-3xl border-2 border-dashed border-slate-600">
+                  <ImageOff className="w-20 h-20 mb-4" />
+                  <p className="text-xl font-semibold">Sin imagen disponible</p>
                 </div>
               )}
             </div>
 
-            {/* INFO SECTION */}
             <div className="space-y-6 sm:space-y-8">
-              {/* Title & Stock */}
-              <div className="space-y-4">
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 leading-tight tracking-tight">
+              <motion.div 
+                className="space-y-4"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 leading-tight tracking-tight">
                   {product.name}
                 </h1>
 
                 <StockBadge inStock={product.inStock} />
-              </div>
+              </motion.div>
 
-              {/* Description */}
               {product.description && (
-                <div className="bg-white rounded-xl p-5 sm:p-6 border border-slate-200 shadow-md">
-                  <h2 className="text-lg sm:text-xl font-bold text-slate-800 mb-3">
+                <motion.div
+                  className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 sm:p-6 shadow-xl"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <h2 className="text-lg sm:text-xl font-bold text-white mb-3 flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-yellow-400" />
                     Descripción
                   </h2>
-                  <p className="text-slate-700 text-base sm:text-lg leading-relaxed whitespace-pre-line">
+                  <p className="text-slate-300 text-base sm:text-lg leading-relaxed whitespace-pre-line">
                     {product.description}
                   </p>
-                </div>
+                </motion.div>
               )}
 
-              {/* CTA Button */}
-              <AddToCartButton
-                product={product}
-                inCart={inCart}
-                onAdd={handleAddToCart}
-              />
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <AddToCartButton
+                  product={product}
+                  inCart={inCart}
+                  onAdd={handleAddToCart}
+                />
+              </motion.div>
 
-              {/* Hint text */}
               {product.image && (
-                <p className="text-slate-500 text-center text-sm sm:text-base leading-relaxed">
+                <motion.p
+                  className="text-slate-400 text-center text-sm sm:text-base bg-white/5 backdrop-blur-sm rounded-full py-3 px-4 border border-white/10"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                >
                   💡 Toca la imagen para verla en tamaño completo
-                </p>
+                </motion.p>
               )}
 
-              {/* Additional info */}
               {!product.inStock && (
-                <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-lg">
-                  <p className="text-amber-800 text-sm sm:text-base font-medium">
+                <motion.div 
+                  className="bg-amber-500/10 border border-amber-500/30 backdrop-blur-sm p-4 rounded-xl"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  <p className="text-amber-200 text-sm sm:text-base font-medium">
                     ⚠️ Este producto no está disponible actualmente. Puedes agregarlo
                     a tu consulta para recibir notificaciones cuando vuelva a estar
                     en stock.
                   </p>
-                </div>
+                </motion.div>
               )}
             </div>
           </motion.div>
         )}
       </main>
 
-      {/* IMAGE MODAL */}
       {product && (
         <ImageModal
           isOpen={isImageModalOpen}

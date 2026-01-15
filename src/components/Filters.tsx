@@ -10,6 +10,7 @@ import {
   Package,
   Check,
   Filter,
+  Sparkles,
 } from "lucide-react";
 import React, { useCallback, useMemo } from "react";
 
@@ -84,22 +85,39 @@ const FilterBadge = React.memo<FilterBadgeProps>(
         whileTap={reduceMotion ? undefined : { scale: 0.95 }}
         whileHover={reduceMotion ? undefined : { scale: 1.05 }}
         onClick={onClick}
-        className={`
-          min-h-[48px] px-6 py-3 rounded-xl text-base font-bold
-          transition-all duration-300 border shadow-lg touch-manipulation
-          ${
-            isSelected
-              ? "bg-primary text-primary-foreground border-primary shadow-primary/50 scale-105"
-              : "bg-slate-800/60 text-slate-200 border-slate-700 hover:bg-slate-700 hover:border-slate-600"
-          }
-        `}
+        className="group relative"
         aria-pressed={isSelected}
         aria-label={`Filtrar por ${label}`}
       >
-        <span className="flex items-center gap-2">
-          {label}
-          {isSelected && <Check className="w-5 h-5" />}
-        </span>
+        {/* Glow effect - solo si está seleccionado */}
+        {isSelected && (
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-xl blur-md opacity-50 group-hover:opacity-75 transition-opacity" />
+        )}
+
+        <div
+          className={`
+            relative min-h-[48px] px-6 py-3 rounded-xl text-base font-bold
+            transition-all duration-300 border shadow-lg touch-manipulation
+            ${
+              isSelected
+                ? "bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white border-blue-500/50"
+                : "bg-white/5 backdrop-blur-sm text-slate-200 border-white/10 hover:bg-white/10 hover:border-white/20"
+            }
+          `}
+        >
+          <span className="flex items-center gap-2">
+            {label}
+            {isSelected && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 200 }}
+              >
+                <Check className="w-5 h-5" />
+              </motion.div>
+            )}
+          </span>
+        </div>
       </motion.button>
     );
   }
@@ -112,37 +130,66 @@ const FiltersHeader = React.memo(
     hasFilters,
     activeCount,
     onClear,
+    reduceMotion,
   }: {
     hasFilters: boolean;
     activeCount: number;
     onClear: () => void;
+    reduceMotion: boolean;
   }) => (
     <div className="flex items-center justify-between flex-wrap gap-4">
       <div className="flex items-center gap-3">
-        <div className="p-2 rounded-full bg-primary/10 border border-primary/20">
-          <Filter className="w-6 h-6 text-primary" />
-        </div>
+        <motion.div
+          className="p-3 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30 shadow-lg"
+          animate={reduceMotion ? undefined : {
+            boxShadow: [
+              "0 0 20px rgba(59, 130, 246, 0.3)",
+              "0 0 30px rgba(168, 85, 247, 0.4)",
+              "0 0 20px rgba(59, 130, 246, 0.3)",
+            ],
+          }}
+          transition={reduceMotion ? undefined : {
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
+          <Filter className="w-6 h-6 text-blue-400" />
+        </motion.div>
         <div>
-          <h2 className="text-2xl font-bold text-slate-100">Filtros</h2>
+          <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
+            Filtros
+          </h2>
           {hasFilters && (
-            <p className="text-sm text-slate-400 mt-1">
-              {activeCount} {activeCount === 1 ? "activo" : "activos"}
-            </p>
+            <motion.p
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-sm text-slate-400 mt-1 font-medium"
+            >
+              ✨ {activeCount} {activeCount === 1 ? "activo" : "activos"}
+            </motion.p>
           )}
         </div>
       </div>
 
       {hasFilters && (
-        <Button
-          variant="ghost"
-          size="lg"
-          onClick={onClear}
-          className="min-h-[48px] px-5 text-base text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-transparent hover:border-red-500/30 transition-all duration-300 touch-manipulation"
-          aria-label="Limpiar todos los filtros"
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          whileHover={reduceMotion ? undefined : { scale: 1.05 }}
+          whileTap={reduceMotion ? undefined : { scale: 0.95 }}
         >
-          <X className="w-5 h-5 mr-2" />
-          Limpiar
-        </Button>
+          <Button
+            variant="ghost"
+            size="lg"
+            onClick={onClear}
+            className="min-h-[48px] px-5 text-base font-bold text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 transition-all duration-300 touch-manipulation shadow-lg hover:shadow-red-500/20"
+            aria-label="Limpiar todos los filtros"
+          >
+            <X className="w-5 h-5 mr-2" />
+            Limpiar
+          </Button>
+        </motion.div>
       )}
     </div>
   )
@@ -158,9 +205,11 @@ const SectionTitle = React.memo(
     icon: React.ComponentType<{ className?: string }>;
     title: string;
   }) => (
-    <div className="flex items-center gap-3">
-      <Icon className="w-6 h-6 text-primary" />
-      <h3 className="text-lg font-bold text-slate-200">{title}</h3>
+    <div className="flex items-center gap-3 mb-4">
+      <div className="p-2 rounded-full bg-purple-500/20 border border-purple-500/30">
+        <Icon className="w-5 h-5 text-purple-400" />
+      </div>
+      <h3 className="text-lg font-bold text-white">{title}</h3>
     </div>
   )
 );
@@ -182,8 +231,13 @@ const CategoryFilters = React.memo(
     if (categories.length === 0) return null;
 
     return (
-      <div className="space-y-4">
-        <SectionTitle icon={Tag} title="Categorías" />
+      <motion.div
+        className="space-y-4"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <SectionTitle icon={Tag} title="🏷️ Categorías" />
 
         <div className="flex flex-wrap gap-3">
           <FilterBadge
@@ -203,7 +257,7 @@ const CategoryFilters = React.memo(
             />
           ))}
         </div>
-      </div>
+      </motion.div>
     );
   }
 );
@@ -225,8 +279,13 @@ const CollectionFilters = React.memo(
     if (collections.length === 0) return null;
 
     return (
-      <div className="space-y-4">
-        <SectionTitle icon={Layers} title="Colecciones" />
+      <motion.div
+        className="space-y-4"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
+      >
+        <SectionTitle icon={Layers} title="📦 Colecciones" />
 
         <div className="flex flex-wrap gap-3">
           <FilterBadge
@@ -246,7 +305,7 @@ const CollectionFilters = React.memo(
             />
           ))}
         </div>
-      </div>
+      </motion.div>
     );
   }
 );
@@ -257,41 +316,79 @@ const StockFilter = React.memo(
   ({
     showOnlyInStock,
     onStockFilterChange,
+    reduceMotion,
   }: {
     showOnlyInStock: boolean;
     onStockFilterChange: (value: boolean) => void;
+    reduceMotion: boolean;
   }) => {
     const handleToggle = useCallback(() => {
       onStockFilterChange(!showOnlyInStock);
     }, [showOnlyInStock, onStockFilterChange]);
 
     return (
-      <div className="p-6 rounded-xl border border-slate-700 bg-slate-800/60 flex items-center justify-between gap-4 min-h-[72px] hover:bg-slate-700/60 hover:border-slate-600 transition-all duration-300">
-        <div className="flex items-center gap-4">
-          <div className="p-2 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-            <Package className="w-6 h-6 text-emerald-400" />
-          </div>
-          <div>
-            <Label
-              htmlFor="stock-filter"
-              className="text-base font-bold text-slate-100 cursor-pointer"
-            >
-              Solo disponibles
-            </Label>
-            <p className="text-sm text-slate-400 mt-1">
-              Ocultar productos agotados
-            </p>
-          </div>
-        </div>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.2 }}
+        whileHover={reduceMotion ? undefined : { scale: 1.02 }}
+        className="group relative"
+      >
+        {/* Glow effect cuando está activo */}
+        {showOnlyInStock && (
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-green-500/20 rounded-xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity" />
+        )}
 
-        <Switch
-          id="stock-filter"
-          checked={showOnlyInStock}
-          onCheckedChange={onStockFilterChange}
-          className="data-[state=checked]:bg-emerald-500 touch-manipulation"
-          aria-label="Mostrar solo productos disponibles"
-        />
-      </div>
+        <div className="relative p-6 rounded-xl border bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 hover:border-white/20 flex items-center justify-between gap-4 min-h-[72px] transition-all duration-300 shadow-lg">
+          <div className="flex items-center gap-4">
+            <motion.div
+              className="p-3 rounded-full bg-gradient-to-br from-emerald-500/20 to-green-500/20 border border-emerald-500/30 shadow-lg"
+              animate={showOnlyInStock && !reduceMotion ? {
+                boxShadow: [
+                  "0 0 20px rgba(16, 185, 129, 0.3)",
+                  "0 0 30px rgba(16, 185, 129, 0.5)",
+                  "0 0 20px rgba(16, 185, 129, 0.3)",
+                ],
+              } : undefined}
+              transition={reduceMotion ? undefined : {
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            >
+              <Package className="w-6 h-6 text-emerald-400" />
+            </motion.div>
+            <div>
+              <Label
+                htmlFor="stock-filter"
+                className="text-base font-bold text-white cursor-pointer flex items-center gap-2"
+              >
+                Solo disponibles
+                {showOnlyInStock && (
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 200 }}
+                  >
+                    ✅
+                  </motion.span>
+                )}
+              </Label>
+              <p className="text-sm text-slate-400 mt-1">
+                Ocultar productos agotados
+              </p>
+            </div>
+          </div>
+
+          <Switch
+            id="stock-filter"
+            checked={showOnlyInStock}
+            onCheckedChange={onStockFilterChange}
+            className="data-[state=checked]:bg-emerald-500 touch-manipulation scale-125"
+            aria-label="Mostrar solo productos disponibles"
+          />
+        </div>
+      </motion.div>
     );
   }
 );
@@ -312,7 +409,7 @@ const Filters = ({
   onStockFilterChange,
   onClearFilters,
 }: FiltersProps) => {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReducedMotion() || false;
 
   const hasFilters = useMemo(
     () => hasActiveFilters(selectedCategory, selectedCollection, showOnlyInStock),
@@ -329,32 +426,45 @@ const Filters = ({
   }, [onClearFilters]);
 
   return (
-    <div className="space-y-8 p-6 rounded-2xl bg-slate-800/40 border border-slate-700/50 shadow-xl">
-      <FiltersHeader
-        hasFilters={hasFilters}
-        activeCount={activeCount}
-        onClear={handleClearFilters}
-      />
+    <motion.div
+      className="relative space-y-8 p-6 sm:p-8 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 shadow-2xl overflow-hidden"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      {/* Background gradient decoration */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-pink-500/10 via-purple-500/10 to-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
-      <CategoryFilters
-        categories={categories}
-        selectedCategory={selectedCategory}
-        onCategoryChange={onCategoryChange}
-        reduceMotion={!!reduceMotion}
-      />
+      <div className="relative z-10 space-y-8">
+        <FiltersHeader
+          hasFilters={hasFilters}
+          activeCount={activeCount}
+          onClear={handleClearFilters}
+          reduceMotion={reduceMotion}
+        />
 
-      <CollectionFilters
-        collections={collections}
-        selectedCollection={selectedCollection}
-        onCollectionChange={onCollectionChange}
-        reduceMotion={!!reduceMotion}
-      />
+        <CategoryFilters
+          categories={categories}
+          selectedCategory={selectedCategory}
+          onCategoryChange={onCategoryChange}
+          reduceMotion={reduceMotion}
+        />
 
-      <StockFilter
-        showOnlyInStock={showOnlyInStock}
-        onStockFilterChange={onStockFilterChange}
-      />
-    </div>
+        <CollectionFilters
+          collections={collections}
+          selectedCollection={selectedCollection}
+          onCollectionChange={onCollectionChange}
+          reduceMotion={reduceMotion}
+        />
+
+        <StockFilter
+          showOnlyInStock={showOnlyInStock}
+          onStockFilterChange={onStockFilterChange}
+          reduceMotion={reduceMotion}
+        />
+      </div>
+    </motion.div>
   );
 };
 
