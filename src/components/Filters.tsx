@@ -9,6 +9,7 @@ import {
   X,
   Package,
   Check,
+  Filter,
 } from "lucide-react"
 
 type Category = {
@@ -50,20 +51,21 @@ const FilterBadge = ({ label, isSelected, onClick }: FilterBadgeProps) => {
   return (
     <motion.button
       whileTap={{ scale: 0.95 }}
+      whileHover={{ scale: 1.05 }}
       onClick={onClick}
       className={`
-        min-h-[44px] px-6 py-3 rounded-full text-sm font-bold
-        transition-all duration-200 border
+        min-h-[48px] px-6 py-3 rounded-xl text-base font-bold
+        transition-all duration-300 border shadow-lg
         ${
           isSelected
-            ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white border-purple-400 shadow-md"
-            : "bg-black/40 text-purple-200 border-purple-500/30 hover:bg-purple-900/30"
+            ? "bg-primary text-primary-foreground border-primary shadow-primary/50 scale-105"
+            : "bg-slate-800/60 text-slate-200 border-slate-700 hover:bg-slate-700 hover:border-slate-600"
         }
       `}
     >
       <span className="flex items-center gap-2">
         {label}
-        {isSelected && <Check className="w-4 h-4" />}
+        {isSelected && <Check className="w-5 h-5" />}
       </span>
     </motion.button>
   )
@@ -93,96 +95,111 @@ const Filters = ({
     (showOnlyInStock ? 1 : 0)
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 p-6 rounded-2xl bg-slate-800/40 border border-slate-700/50 shadow-xl">
       {/* HEADER */}
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-purple-300">Filtros</h2>
-          {hasActiveFilters && (
-            <p className="text-xs text-purple-200">
-              {activeFiltersCount} activos
-            </p>
-          )}
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-full bg-primary/10 border border-primary/20">
+            <Filter className="w-6 h-6 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-slate-100">Filtros</h2>
+            {hasActiveFilters && (
+              <p className="text-sm text-slate-400 mt-1">
+                {activeFiltersCount} {activeFiltersCount === 1 ? "activo" : "activos"}
+              </p>
+            )}
+          </div>
         </div>
 
         {hasActiveFilters && (
           <Button
             variant="ghost"
-            size="sm"
+            size="lg"
             onClick={onClearFilters}
-            className="text-red-400 min-h-[40px]"
+            className="min-h-[48px] px-5 text-base text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-transparent hover:border-red-500/30 transition-all duration-300"
           >
-            <X className="w-4 h-4 mr-1" />
+            <X className="w-5 h-5 mr-2" />
             Limpiar
           </Button>
         )}
       </div>
 
       {/* ================= CATEGORIAS ================= */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <Tag className="w-4 h-4 text-purple-300" />
-          <h3 className="text-sm font-bold text-purple-300">Categorías</h3>
-        </div>
+      {categories.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Tag className="w-6 h-6 text-primary" />
+            <h3 className="text-lg font-bold text-slate-200">Categorías</h3>
+          </div>
 
-        <div className="flex flex-wrap gap-3">
-          <FilterBadge
-            label="Todas"
-            isSelected={!selectedCategory}
-            onClick={() => onCategoryChange(null)}
-          />
-
-          {categories.map((cat) => (
+          <div className="flex flex-wrap gap-3">
             <FilterBadge
-              key={cat.id}
-              label={cat.name}
-              isSelected={selectedCategory === cat.slug}
-              onClick={() => onCategoryChange(cat.slug)}
+              label="Todas"
+              isSelected={!selectedCategory}
+              onClick={() => onCategoryChange(null)}
             />
-          ))}
+
+            {categories.map((cat) => (
+              <FilterBadge
+                key={cat.id}
+                label={cat.name}
+                isSelected={selectedCategory === cat.slug}
+                onClick={() => onCategoryChange(cat.slug)}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ================= COLECCIONES ================= */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <Layers className="w-4 h-4 text-pink-300" />
-          <h3 className="text-sm font-bold text-pink-300">Colecciones</h3>
-        </div>
+      {collections.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Layers className="w-6 h-6 text-primary" />
+            <h3 className="text-lg font-bold text-slate-200">Colecciones</h3>
+          </div>
 
-        <div className="flex flex-wrap gap-3">
-          <FilterBadge
-            label="Todas"
-            isSelected={!selectedCollection}
-            onClick={() => onCollectionChange(null)}
-          />
-
-          {collections.map((col) => (
+          <div className="flex flex-wrap gap-3">
             <FilterBadge
-              key={col.id}
-              label={col.name}
-              isSelected={selectedCollection === col.slug}
-              onClick={() => onCollectionChange(col.slug)}
+              label="Todas"
+              isSelected={!selectedCollection}
+              onClick={() => onCollectionChange(null)}
             />
-          ))}
+
+            {collections.map((col) => (
+              <FilterBadge
+                key={col.id}
+                label={col.name}
+                isSelected={selectedCollection === col.slug}
+                onClick={() => onCollectionChange(col.slug)}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ================= STOCK ================= */}
-      <div className="p-5 rounded-xl border border-purple-500/30 bg-black/40 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Package className="w-5 h-5 text-emerald-400" />
+      <div className="p-6 rounded-xl border border-slate-700 bg-slate-800/60 flex items-center justify-between gap-4 min-h-[72px] hover:bg-slate-700/60 hover:border-slate-600 transition-all duration-300">
+        <div className="flex items-center gap-4">
+          <div className="p-2 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+            <Package className="w-6 h-6 text-emerald-400" />
+          </div>
           <div>
-            <Label className="text-sm font-bold text-white">
+            <Label className="text-base font-bold text-slate-100 cursor-pointer">
               Solo disponibles
             </Label>
-            <p className="text-xs text-muted-foreground">
-              Ocultar agotados
+            <p className="text-sm text-slate-400 mt-1">
+              Ocultar productos agotados
             </p>
           </div>
         </div>
 
-        <Switch checked={showOnlyInStock} onCheckedChange={onStockFilterChange} />
+        <Switch 
+          checked={showOnlyInStock} 
+          onCheckedChange={onStockFilterChange}
+          className="data-[state=checked]:bg-emerald-500"
+        />
       </div>
     </div>
   )

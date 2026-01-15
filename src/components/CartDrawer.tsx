@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Trash2, MessageCircle, ShoppingBag, Loader2, Package, Sparkles } from "lucide-react";
+import { Trash2, MessageCircle, ShoppingBag, Loader2, Package, Sparkles, X } from "lucide-react";
 import { useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
@@ -106,6 +106,7 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
     toast({
       description: `Producto eliminado: ${name}`,
       duration: 2000,
+      className: "bg-slate-900/95 backdrop-blur-md border border-slate-700",
     });
   };
 
@@ -115,97 +116,146 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
     toast({
       description: "Consulta vaciada",
       duration: 2000,
+      className: "bg-slate-900/95 backdrop-blur-md border border-slate-700",
     });
   };
 
   return (
     <>
-      {/* FIX CRÍTICO */}
       <Sheet open={isOpen} onOpenChange={onClose}>
-        <SheetContent className="w-full sm:max-w-lg flex flex-col">
-          <SheetHeader>
-            <SheetTitle className="flex items-center gap-3">
-              <ShoppingBag className="w-6 h-6" />
-              Mi Consulta ({items.length})
+        <SheetContent className="w-full sm:max-w-lg flex flex-col bg-slate-900/95 backdrop-blur-xl border-slate-700">
+          <SheetHeader className="pb-6 border-b border-slate-700/50">
+            <SheetTitle className="flex items-center justify-between gap-3 text-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-full bg-primary/10 border border-primary/20">
+                  <ShoppingBag className="w-6 h-6 text-primary" />
+                </div>
+                <span className="text-2xl font-bold">Mi Consulta</span>
+              </div>
+              <Badge className="text-base px-3 py-1.5 bg-primary/20 text-primary border-primary/30">
+                {items.length}
+              </Badge>
             </SheetTitle>
           </SheetHeader>
 
           {items.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center gap-4">
-              <ShoppingBag className="w-16 h-16 text-muted-foreground" />
-              <p className="text-muted-foreground">Tu consulta está vacía</p>
+            <div className="flex-1 flex flex-col items-center justify-center gap-6 py-12">
+              <div className="p-8 rounded-full bg-slate-800/50 border border-slate-700">
+                <ShoppingBag className="w-20 h-20 text-slate-500" />
+              </div>
+              <div className="text-center space-y-2">
+                <p className="text-xl font-semibold text-slate-300">
+                  Tu consulta está vacía
+                </p>
+                <p className="text-sm text-slate-500">
+                  Agregá productos para consultar
+                </p>
+              </div>
             </div>
           ) : (
             <>
-              <div className="flex-1 overflow-y-auto py-4 space-y-3">
-                {items.map((item) => (
-                  <div key={item.id} className="flex items-center gap-3">
-                    {item.image ? (
-                      <img
-                        src={item.image}
-                        className="w-16 h-16 object-cover rounded-lg"
-                      />
-                    ) : (
-                      <Package className="w-16 h-16 text-muted-foreground" />
-                    )}
-                    <div className="flex-1">
-                      <p className="font-semibold">{item.name}</p>
-                      {item.category && (
-                        <Badge variant="secondary">{item.category}</Badge>
-                      )}
-                    </div>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => handleRemove(item.id, item.name)}
+              <div className="flex-1 overflow-y-auto py-6 space-y-4">
+                <AnimatePresence mode="popLayout">
+                  {items.map((item, index) => (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      transition={{ duration: 0.2, delay: index * 0.05 }}
+                      className="flex items-center gap-4 p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 hover:bg-slate-800/60 hover:border-slate-600 transition-all duration-300"
                     >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
+                      {item.image ? (
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-20 h-20 object-cover rounded-lg shadow-md"
+                        />
+                      ) : (
+                        <div className="w-20 h-20 flex items-center justify-center rounded-lg bg-slate-700/50">
+                          <Package className="w-10 h-10 text-slate-500" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-base text-slate-100 line-clamp-2 leading-snug mb-2">
+                          {item.name}
+                        </p>
+                        {item.category && (
+                          <Badge 
+                            variant="secondary" 
+                            className="text-xs bg-slate-700/50 text-slate-300 border-slate-600"
+                          >
+                            {item.category}
+                          </Badge>
+                        )}
+                      </div>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => handleRemove(item.id, item.name)}
+                        className="min-w-[44px] min-h-[44px] rounded-lg hover:bg-red-500/20 hover:text-red-400 transition-colors"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </Button>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               </div>
 
-              <Button
-                onClick={handleWhatsAppClick}
-                disabled={isLoading}
-                className="w-full mt-4"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Enviando…
-                  </>
-                ) : (
-                  <>
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Consultar por WhatsApp
-                  </>
-                )}
-              </Button>
+              <div className="pt-6 border-t border-slate-700/50 space-y-3">
+                <Button
+                  onClick={handleWhatsAppClick}
+                  disabled={isLoading}
+                  size="lg"
+                  className="w-full min-h-[56px] text-base font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg hover:shadow-emerald-500/50 transition-all duration-300 hover:scale-105 active:scale-95"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Enviando…
+                    </>
+                  ) : (
+                    <>
+                      <MessageCircle className="w-5 h-5 mr-2" />
+                      Consultar por WhatsApp
+                    </>
+                  )}
+                </Button>
 
-              <Button
-                variant="outline"
-                onClick={() => setShowClearDialog(true)}
-                className="w-full mt-2"
-              >
-                Vaciar consulta
-              </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowClearDialog(true)}
+                  size="lg"
+                  className="w-full min-h-[52px] text-base font-semibold bg-slate-800/50 hover:bg-slate-700 text-slate-300 border-slate-700 hover:border-slate-600 transition-all duration-300"
+                >
+                  <Trash2 className="w-5 h-5 mr-2" />
+                  Vaciar consulta
+                </Button>
+              </div>
             </>
           )}
         </SheetContent>
       </Sheet>
 
       <AlertDialog open={showClearDialog} onOpenChange={setShowClearDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-slate-900/95 backdrop-blur-xl border-slate-700 max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Vaciar consulta?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Se eliminarán todos los productos.
+            <AlertDialogTitle className="text-2xl font-bold text-slate-100 flex items-center gap-2">
+              <Trash2 className="w-6 h-6 text-red-400" />
+              ¿Vaciar consulta?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base text-slate-400 leading-relaxed pt-2">
+              Se eliminarán todos los productos de tu consulta. Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleClear}>
+          <AlertDialogFooter className="gap-3 sm:gap-3">
+            <AlertDialogCancel className="min-h-[52px] text-base bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700">
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleClear}
+              className="min-h-[52px] text-base bg-red-600 hover:bg-red-500 text-white"
+            >
               Vaciar
             </AlertDialogAction>
           </AlertDialogFooter>

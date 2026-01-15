@@ -141,14 +141,13 @@ const Catalog = () => {
   const totalPages = Math.max(1, Math.ceil(total / PRODUCTS_PER_PAGE))
 
   /* ======================= FILTERS ======================= */
-const visibleCollections = collections.filter((col) =>
-  allFilteredProducts.some((p) => p.collectionSlug === col.slug)
-)
+  const visibleCollections = collections.filter((col) =>
+    allFilteredProducts.some((p) => p.collectionSlug === col.slug)
+  )
 
-const visibleCategories = categories.filter((cat) =>
-  allFilteredProducts.some((p) => p.categorySlug === cat.slug)
-)
-
+  const visibleCategories = categories.filter((cat) =>
+    allFilteredProducts.some((p) => p.categorySlug === cat.slug)
+  )
 
   /* ======================= HANDLERS ======================= */
   const handleCategoryChange = (slug: string | null) => {
@@ -177,57 +176,96 @@ const visibleCategories = categories.filter((cat) =>
 
   /* ======================= UI ======================= */
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
       <Navbar onCartClick={() => setIsCartOpen(true)} />
       <div className="h-20" />
 
-      <main className="container mx-auto px-4 pt-10 pb-20">
-        <SearchBar value={searchQuery} onChange={setSearchQuery} />
-
-        <Filters
-          collections={visibleCollections}
-          categories={visibleCategories}
-          selectedCategory={selectedCategory}
-          selectedCollection={selectedCollection}
-          onCategoryChange={handleCategoryChange}
-          onCollectionChange={handleCollectionChange}
-          showOnlyInStock={showOnlyInStock}
-          onStockFilterChange={setShowOnlyInStock}
-          onClearFilters={handleClearFilters}
-        />
-
-        <div className="my-6">
-          <Badge>{total} productos</Badge>
+      <main className="max-w-7xl mx-auto px-6 pt-10 pb-24">
+        {/* Search Bar */}
+        <div className="mb-10">
+          <SearchBar value={searchQuery} onChange={setSearchQuery} />
         </div>
 
+        {/* Filters */}
+        <div className="mb-10">
+          <Filters
+            collections={visibleCollections}
+            categories={visibleCategories}
+            selectedCategory={selectedCategory}
+            selectedCollection={selectedCollection}
+            onCategoryChange={handleCategoryChange}
+            onCollectionChange={handleCollectionChange}
+            showOnlyInStock={showOnlyInStock}
+            onStockFilterChange={setShowOnlyInStock}
+            onClearFilters={handleClearFilters}
+          />
+        </div>
+
+        {/* Badge de productos */}
+        <div className="mb-8 flex justify-center md:justify-start">
+          <Badge className="text-base px-4 py-2 bg-slate-800/80 text-slate-200 border-slate-700 shadow-lg">
+            {total} {total === 1 ? "producto" : "productos"}
+          </Badge>
+        </div>
+
+        {/* Products Grid */}
         <AnimatePresence mode="wait">
           {isLoading ? (
-            <motion.div className="text-center py-20">Cargando…</motion.div>
+            <motion.div 
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col items-center justify-center py-32"
+            >
+              <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-6"></div>
+              <p className="text-slate-300 text-xl font-medium">Cargando productos...</p>
+            </motion.div>
           ) : (
-            <ProductGrid
-              products={products}
-              onClearFilters={handleClearFilters}
-              onNavigate={handleNavigateToProduct}
-            />
+            <motion.div
+              key="products"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <ProductGrid
+                products={products}
+                onClearFilters={handleClearFilters}
+                onNavigate={handleNavigateToProduct}
+              />
+            </motion.div>
           )}
         </AnimatePresence>
 
-        {totalPages > 1 && (
-          <motion.div className="flex justify-center gap-2 mt-12">
+        {/* Pagination */}
+        {totalPages > 1 && !isLoading && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-16"
+          >
             <Button
               disabled={currentPage === 1}
               onClick={() => setCurrentPage(currentPage - 1)}
+              className="min-h-[52px] min-w-[52px] px-6 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg"
+              size="lg"
             >
-              <ChevronLeft />
+              <ChevronLeft className="w-6 h-6" />
             </Button>
-            <span>
-              {currentPage} / {totalPages}
-            </span>
+            
+            <div className="flex items-center gap-3 px-6 py-3 bg-slate-800/80 border border-slate-700 rounded-xl shadow-lg">
+              <span className="text-slate-200 font-semibold text-lg">
+                Página <span className="text-primary">{currentPage}</span> de {totalPages}
+              </span>
+            </div>
+            
             <Button
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage(currentPage + 1)}
+              className="min-h-[52px] min-w-[52px] px-6 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg"
+              size="lg"
             >
-              <ChevronRight />
+              <ChevronRight className="w-6 h-6" />
             </Button>
           </motion.div>
         )}
