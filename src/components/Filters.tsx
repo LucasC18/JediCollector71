@@ -1,18 +1,9 @@
 import { motion, useReducedMotion } from "framer-motion";
-import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import {
-  Tag,
-  Layers,
-  X,
-  Package,
-  Check,
-  Filter,
-  Sparkles,
-} from "lucide-react";
-import React, { useCallback, useMemo } from "react";
+import { Tag, Layers, X, Package, Check, Filter } from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 
 /* ================================
    TYPES & INTERFACES
@@ -57,8 +48,9 @@ const getActiveFiltersCount = (
   showOnlyInStock: boolean
 ): number => {
   let count = 0;
-  if (selectedCategory) count++;
   if (selectedCollection) count++;
+  // Categoría solo cuenta si hay colección seleccionada (porque si no, ni debería existir en UI)
+  if (selectedCollection && selectedCategory) count++;
   if (showOnlyInStock) count++;
   return count;
 };
@@ -69,8 +61,8 @@ const hasActiveFilters = (
   showOnlyInStock: boolean
 ): boolean => {
   return (
-    selectedCategory !== null ||
     selectedCollection !== null ||
+    (selectedCollection !== null && selectedCategory !== null) ||
     showOnlyInStock
   );
 };
@@ -88,6 +80,7 @@ const FilterBadge = React.memo<FilterBadgeProps>(
         className="group relative"
         aria-pressed={isSelected}
         aria-label={`Filtrar por ${label}`}
+        type="button"
       >
         {/* Glow effect - solo si está seleccionado */}
         {isSelected && (
@@ -141,18 +134,26 @@ const FiltersHeader = React.memo(
       <div className="flex items-center gap-3">
         <motion.div
           className="p-3 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30 shadow-lg"
-          animate={reduceMotion ? undefined : {
-            boxShadow: [
-              "0 0 20px rgba(59, 130, 246, 0.3)",
-              "0 0 30px rgba(168, 85, 247, 0.4)",
-              "0 0 20px rgba(59, 130, 246, 0.3)",
-            ],
-          }}
-          transition={reduceMotion ? undefined : {
-            duration: 2,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
+          animate={
+            reduceMotion
+              ? undefined
+              : {
+                  boxShadow: [
+                    "0 0 20px rgba(59, 130, 246, 0.3)",
+                    "0 0 30px rgba(168, 85, 247, 0.4)",
+                    "0 0 20px rgba(59, 130, 246, 0.3)",
+                  ],
+                }
+          }
+          transition={
+            reduceMotion
+              ? undefined
+              : {
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }
+          }
         >
           <Filter className="w-6 h-6 text-blue-400" />
         </motion.div>
@@ -185,6 +186,7 @@ const FiltersHeader = React.memo(
             onClick={onClear}
             className="min-h-[48px] px-5 text-base font-bold text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 transition-all duration-300 touch-manipulation shadow-lg hover:shadow-red-500/20"
             aria-label="Limpiar todos los filtros"
+            type="button"
           >
             <X className="w-5 h-5 mr-2" />
             Limpiar
@@ -228,7 +230,8 @@ const CategoryFilters = React.memo(
     onCategoryChange: (slug: string | null) => void;
     reduceMotion: boolean;
   }) => {
-    if (categories.length === 0) return null;
+    // Si no hay categorías (o todavía no cargaron), no renderizamos nada
+    if (!categories || categories.length === 0) return null;
 
     return (
       <motion.div
@@ -283,7 +286,7 @@ const CollectionFilters = React.memo(
         className="space-y-4"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.1 }}
+        transition={{ duration: 0.3 }}
       >
         <SectionTitle icon={Layers} title="📦 Colecciones" />
 
@@ -330,7 +333,7 @@ const StockFilter = React.memo(
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.2 }}
+        transition={{ duration: 0.3, delay: 0.15 }}
         whileHover={reduceMotion ? undefined : { scale: 1.02 }}
         className="group relative"
       >
@@ -343,18 +346,26 @@ const StockFilter = React.memo(
           <div className="flex items-center gap-4">
             <motion.div
               className="p-3 rounded-full bg-gradient-to-br from-emerald-500/20 to-green-500/20 border border-emerald-500/30 shadow-lg"
-              animate={showOnlyInStock && !reduceMotion ? {
-                boxShadow: [
-                  "0 0 20px rgba(16, 185, 129, 0.3)",
-                  "0 0 30px rgba(16, 185, 129, 0.5)",
-                  "0 0 20px rgba(16, 185, 129, 0.3)",
-                ],
-              } : undefined}
-              transition={reduceMotion ? undefined : {
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
+              animate={
+                showOnlyInStock && !reduceMotion
+                  ? {
+                      boxShadow: [
+                        "0 0 20px rgba(16, 185, 129, 0.3)",
+                        "0 0 30px rgba(16, 185, 129, 0.5)",
+                        "0 0 20px rgba(16, 185, 129, 0.3)",
+                      ],
+                    }
+                  : undefined
+              }
+              transition={
+                reduceMotion
+                  ? undefined
+                  : {
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }
+              }
             >
               <Package className="w-6 h-6 text-emerald-400" />
             </motion.div>
@@ -411,19 +422,44 @@ const Filters = ({
 }: FiltersProps) => {
   const reduceMotion = useReducedMotion() || false;
 
+  // ✅ Reseteo automático de categoría cuando cambia la colección
+  const prevCollectionRef = useRef<string | null>(null);
+  useEffect(() => {
+    const prev = prevCollectionRef.current;
+    const curr = selectedCollection;
+
+    // Primer render: setear ref y listo
+    if (prev === null && curr === null) {
+      prevCollectionRef.current = curr;
+      return;
+    }
+
+    // Si cambia colección (incluye pasar a null), limpiar categoría
+    if (prev !== curr) {
+      if (selectedCategory !== null) {
+        onCategoryChange(null);
+      }
+      prevCollectionRef.current = curr;
+    }
+  }, [selectedCollection, selectedCategory, onCategoryChange]);
+
   const hasFilters = useMemo(
     () => hasActiveFilters(selectedCategory, selectedCollection, showOnlyInStock),
     [selectedCategory, selectedCollection, showOnlyInStock]
   );
 
   const activeCount = useMemo(
-    () => getActiveFiltersCount(selectedCategory, selectedCollection, showOnlyInStock),
+    () =>
+      getActiveFiltersCount(selectedCategory, selectedCollection, showOnlyInStock),
     [selectedCategory, selectedCollection, showOnlyInStock]
   );
 
   const handleClearFilters = useCallback(() => {
     onClearFilters();
   }, [onClearFilters]);
+
+  // ✅ Mostrar categorías SOLO si hay colección seleccionada
+  const shouldShowCategories = !!selectedCollection;
 
   return (
     <motion.div
@@ -444,19 +480,38 @@ const Filters = ({
           reduceMotion={reduceMotion}
         />
 
-        <CategoryFilters
-          categories={categories}
-          selectedCategory={selectedCategory}
-          onCategoryChange={onCategoryChange}
-          reduceMotion={reduceMotion}
-        />
-
+        {/* ✅ 1) Primero Colecciones */}
         <CollectionFilters
           collections={collections}
           selectedCollection={selectedCollection}
           onCollectionChange={onCollectionChange}
           reduceMotion={reduceMotion}
         />
+
+        {/* ✅ 2) Luego Categorías (solo si hay colección elegida) */}
+        {shouldShowCategories ? (
+          <CategoryFilters
+            categories={categories}
+            selectedCategory={selectedCategory}
+            onCategoryChange={onCategoryChange}
+            reduceMotion={reduceMotion}
+          />
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25 }}
+            className="p-5 rounded-xl border bg-white/5 backdrop-blur-sm border-white/10 text-slate-300"
+          >
+            <p className="text-sm font-medium">
+              Elegí una <span className="text-white font-bold">colección</span>{" "}
+              para ver sus categorías.
+            </p>
+            <p className="text-xs text-slate-400 mt-1">
+              (Así evitamos el “menú de categorías infinito” versión director’s cut 😄)
+            </p>
+          </motion.div>
+        )}
 
         <StockFilter
           showOnlyInStock={showOnlyInStock}
