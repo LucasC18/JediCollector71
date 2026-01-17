@@ -5,11 +5,9 @@ import {
   ShoppingBag,
   Loader2,
   Package,
-  CheckCircle2,
-  Sparkles,
   X,
 } from "lucide-react";
-import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -58,15 +56,6 @@ interface ConsultationResponse {
   whatsappMessage: string;
 }
 
-interface ApiError {
-  message: string;
-}
-
-/* ================================
-   CONSTANTS
-================================ */
-const TOAST_DURATION = 2000;
-
 /* ================================
    HELPERS
 ================================ */
@@ -77,14 +66,15 @@ const formatPhoneNumber = (phone: string): string =>
    MAIN COMPONENT
 ================================ */
 const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
-  const { items, removeFromCart, clearCart } = useCart<CartItem>();
+  // ✅ SIN genéricos (el contexto ya está tipado)
+  const { items, removeFromCart, clearCart } = useCart();
   const { toast } = useToast();
   const reduceMotion = useReducedMotion() ?? false;
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showClearDialog, setShowClearDialog] = useState<boolean>(false);
 
-  const itemCount = useMemo<number>(() => items.length, [items.length]);
+  const itemCount = useMemo(() => items.length, [items.length]);
   const isEmpty = itemCount === 0;
 
   /* ================================
@@ -95,7 +85,7 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
 
     const phone = formatPhoneNumber(WHATSAPP_NUMBER);
 
-    // ✅ Abrimos la pestaña inmediatamente (gesto del usuario)
+    // ✅ abrir ventana SIN await
     const whatsappWindow: Window | null = window.open(
       `https://wa.me/${phone}`,
       "_blank",
@@ -106,7 +96,7 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
 
     try {
       const consultationItems: ConsultationItem[] = items.map(
-        (item): ConsultationItem => ({
+        (item: CartItem) => ({
           productId: item.id,
           qty: item.quantity ?? 1,
         })
@@ -120,7 +110,6 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
         throw new Error("No se pudo generar el mensaje de WhatsApp");
       }
 
-      // ✅ Redirigimos la pestaña ya abierta
       whatsappWindow?.location.replace(
         `https://wa.me/${phone}?text=${encodeURIComponent(
           response.whatsappMessage
@@ -132,7 +121,7 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
 
       toast({
         description: "Consulta enviada. Abriendo WhatsApp…",
-        duration: TOAST_DURATION,
+        duration: 2000,
       });
     } catch (error: unknown) {
       whatsappWindow?.close();
@@ -153,15 +142,8 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
   }, [items, isEmpty, clearCart, onClose, toast]);
 
   /* ================================
-     REMOVE / CLEAR
+     CLEAR
   ================================ */
-  const handleRemove = useCallback(
-    (id: string): void => {
-      removeFromCart(id);
-    },
-    [removeFromCart]
-  );
-
   const handleClear = useCallback((): void => {
     clearCart();
     setShowClearDialog(false);
@@ -189,11 +171,15 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
             <>
               <div className="flex-1 overflow-y-auto space-y-3 py-4">
                 <AnimatePresence>
-                  {items.map((item, index) => (
+                  {items.map((item: CartItem, index: number) => (
                     <motion.div
                       key={item.id}
-                      initial={!reduceMotion ? { opacity: 0, y: 10 } : undefined}
-                      animate={!reduceMotion ? { opacity: 1, y: 0 } : undefined}
+                      initial={
+                        !reduceMotion ? { opacity: 0, y: 10 } : undefined
+                      }
+                      animate={
+                        !reduceMotion ? { opacity: 1, y: 0 } : undefined
+                      }
                       exit={!reduceMotion ? { opacity: 0 } : undefined}
                       transition={{ delay: index * 0.05 }}
                       className="flex items-center gap-4 bg-slate-800/40 p-4 rounded-xl"
@@ -220,7 +206,7 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                       <Button
                         size="icon"
                         variant="ghost"
-                        onClick={() => handleRemove(item.id)}
+                        onClick={() => removeFromCart(item.id)}
                       >
                         <Trash2 />
                       </Button>
