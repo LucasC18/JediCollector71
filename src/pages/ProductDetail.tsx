@@ -8,7 +8,17 @@ import { Product } from "@/types/product";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ArrowLeft, PackageX, X, ImageOff, ZoomIn, ShoppingBag, CheckCircle2, Sparkles } from "lucide-react";
+import {
+  Loader2,
+  ArrowLeft,
+  PackageX,
+  X,
+  ImageOff,
+  ZoomIn,
+  ShoppingBag,
+  CheckCircle2,
+  Sparkles,
+} from "lucide-react";
 
 interface ProductDetailProps {
   id?: string;
@@ -64,9 +74,11 @@ const isAbortError = (error: unknown): boolean => {
   return isApiError(error) && error.name === "AbortError";
 };
 
-const extractProductFromResponse = (res: ProductApiResponse): Product | null => {
+const extractProductFromResponse = (
+  res: ProductApiResponse
+): Product | null => {
   if (!res) return null;
-  
+
   const data =
     "item" in res
       ? res.item
@@ -117,14 +129,14 @@ const useScrollLock = () => {
     };
 
     const scrollbarWidth = getScrollbarWidth();
-    
+
     document.body.style.overflow = "hidden";
     document.body.style.position = "fixed";
     document.body.style.top = `-${scrollPositionRef.current.y}px`;
     document.body.style.left = `-${scrollPositionRef.current.x}px`;
     document.body.style.right = "0";
     document.body.style.width = "100%";
-    
+
     if (scrollbarWidth > 0) {
       document.body.style.paddingRight = `${scrollbarWidth}px`;
     }
@@ -171,7 +183,10 @@ const useScrollLock = () => {
   return { lockScroll, unlockScroll };
 };
 
-const useFocusTrap = (isActive: boolean, containerRef: React.RefObject<HTMLElement>) => {
+const useFocusTrap = (
+  isActive: boolean,
+  containerRef: React.RefObject<HTMLElement>
+) => {
   useEffect(() => {
     if (!isActive || !containerRef.current) return;
 
@@ -180,7 +195,9 @@ const useFocusTrap = (isActive: boolean, containerRef: React.RefObject<HTMLEleme
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     );
     const firstElement = focusableElements[0] as HTMLElement;
-    const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+    const lastElement = focusableElements[
+      focusableElements.length - 1
+    ] as HTMLElement;
 
     const handleTabKey = (e: KeyboardEvent) => {
       if (e.key !== "Tab") return;
@@ -206,7 +223,7 @@ const useFocusTrap = (isActive: boolean, containerRef: React.RefObject<HTMLEleme
 
     container.addEventListener("keydown", handleTabKey);
     container.addEventListener("keydown", handleEscape);
-    
+
     setTimeout(() => {
       firstElement?.focus();
     }, 100);
@@ -234,7 +251,7 @@ const useImageLoader = (src: string | undefined) => {
     setState({ isLoaded: false, hasError: false, isLoading: true });
 
     const img = new Image();
-    
+
     img.onload = () => {
       setState({ isLoaded: true, hasError: false, isLoading: false });
     };
@@ -264,7 +281,11 @@ const useKeyboardShortcuts = (callbacks: {
         e.preventDefault();
         callbacks.onEscape();
       }
-      if ((e.metaKey || e.ctrlKey) && e.key === "ArrowLeft" && callbacks.onBack) {
+      if (
+        (e.metaKey || e.ctrlKey) &&
+        e.key === "ArrowLeft" &&
+        callbacks.onBack
+      ) {
         e.preventDefault();
         callbacks.onBack();
       }
@@ -305,7 +326,7 @@ const useProductFetch = (productId: string | undefined) => {
       );
 
       const productData = extractProductFromResponse(response);
-      
+
       if (!productData) {
         throw new Error("Producto no encontrado");
       }
@@ -316,7 +337,7 @@ const useProductFetch = (productId: string | undefined) => {
       if (isAbortError(err)) {
         return;
       }
-      
+
       const errorMessage = extractErrorMessage(err);
       setError(errorMessage);
       setProduct(null);
@@ -344,7 +365,10 @@ const useViewportHeight = () => {
   useEffect(() => {
     const updateVh = () => {
       setVh(window.innerHeight);
-      document.documentElement.style.setProperty("--vh", `${window.innerHeight * 0.01}px`);
+      document.documentElement.style.setProperty(
+        "--vh",
+        `${window.innerHeight * 0.01}px`
+      );
     };
 
     updateVh();
@@ -365,23 +389,23 @@ const useViewportHeight = () => {
 ================================= */
 const ProductSkeleton = () => (
   <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
-    <motion.div 
+    <motion.div
       className="relative rounded-3xl h-[350px] sm:h-[450px] lg:h-[550px] overflow-hidden bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/30"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
       <motion.div
         className="absolute inset-0 bg-gradient-to-r from-transparent via-slate-700/20 to-transparent"
-        animate={{ x: ['-100%', '100%'] }}
+        animate={{ x: ["-100%", "100%"] }}
         transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
       />
     </motion.div>
     <div className="space-y-6">
       {[
-        { h: 12, w: '75%' },
-        { h: 10, w: '40%' },
-        { h: 32, w: '100%' },
-        { h: 16, w: '100%' }
+        { h: 12, w: "75%" },
+        { h: 10, w: "40%" },
+        { h: 32, w: "100%" },
+        { h: 16, w: "100%" },
       ].map((item, i) => (
         <motion.div
           key={i}
@@ -393,8 +417,13 @@ const ProductSkeleton = () => (
         >
           <motion.div
             className="absolute inset-0 bg-gradient-to-r from-transparent via-slate-700/20 to-transparent"
-            animate={{ x: ['-100%', '100%'] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear", delay: i * 0.2 }}
+            animate={{ x: ["-100%", "100%"] }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: "linear",
+              delay: i * 0.2,
+            }}
           />
         </motion.div>
       ))}
@@ -402,17 +431,17 @@ const ProductSkeleton = () => (
   </div>
 );
 
-const ErrorState = ({ 
-  title, 
-  message, 
-  onRetry 
-}: { 
-  title: string; 
-  message: string; 
+const ErrorState = ({
+  title,
+  message,
+  onRetry,
+}: {
+  title: string;
+  message: string;
   onRetry?: () => void;
 }) => (
   <div className="text-center py-20 sm:py-28">
-    <motion.div 
+    <motion.div
       className="relative bg-slate-800/40 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-10 max-w-md mx-auto overflow-hidden"
       initial={{ opacity: 0, scale: 0.9, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -420,16 +449,19 @@ const ErrorState = ({
     >
       {/* Glow effect */}
       <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 via-transparent to-violet-500/5 pointer-events-none" />
-      
+
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
       >
-        <PackageX className="w-20 h-20 mx-auto text-rose-400/90 mb-5" strokeWidth={1.5} />
+        <PackageX
+          className="w-20 h-20 mx-auto text-rose-400/90 mb-5"
+          strokeWidth={1.5}
+        />
       </motion.div>
-      
-      <motion.h2 
+
+      <motion.h2
         className="text-2xl font-bold text-white mb-3"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -437,8 +469,8 @@ const ErrorState = ({
       >
         {title}
       </motion.h2>
-      
-      <motion.p 
+
+      <motion.p
         className="text-slate-300 text-base leading-relaxed mb-6"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -446,7 +478,7 @@ const ErrorState = ({
       >
         {message}
       </motion.p>
-      
+
       {onRetry && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -530,14 +562,16 @@ const ProductImage = ({
 
   if (imageState.hasError || imageError) {
     return (
-      <motion.div 
+      <motion.div
         className="w-full h-[350px] sm:h-[450px] lg:h-[550px] flex flex-col items-center justify-center text-slate-400 bg-slate-800/30 rounded-3xl border border-dashed border-slate-700/50 backdrop-blur-xl relative overflow-hidden"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-slate-700/5 via-transparent to-slate-600/5" />
         <ImageOff className="w-16 h-16 mb-3 relative z-10" strokeWidth={1.5} />
-        <p className="text-lg font-medium relative z-10">Sin imagen disponible</p>
+        <p className="text-lg font-medium relative z-10">
+          Sin imagen disponible
+        </p>
       </motion.div>
     );
   }
@@ -560,16 +594,17 @@ const ProductImage = ({
       <motion.div
         className="absolute inset-0 rounded-3xl"
         style={{
-          boxShadow: '0 0 0 1px rgba(139, 92, 246, 0), 0 0 20px rgba(139, 92, 246, 0)',
+          boxShadow:
+            "0 0 0 1px rgba(139, 92, 246, 0), 0 0 20px rgba(139, 92, 246, 0)",
         }}
         animate={{
-          boxShadow: isHovered 
-            ? '0 0 0 1px rgba(139, 92, 246, 0.3), 0 0 30px rgba(139, 92, 246, 0.15)'
-            : '0 0 0 1px rgba(139, 92, 246, 0), 0 0 20px rgba(139, 92, 246, 0)',
+          boxShadow: isHovered
+            ? "0 0 0 1px rgba(139, 92, 246, 0.3), 0 0 30px rgba(139, 92, 246, 0.15)"
+            : "0 0 0 1px rgba(139, 92, 246, 0), 0 0 20px rgba(139, 92, 246, 0)",
         }}
         transition={{ duration: 0.4 }}
       />
-      
+
       <img
         src={src}
         alt={alt}
@@ -578,21 +613,23 @@ const ProductImage = ({
         loading="lazy"
         decoding="async"
       />
-      
-      <motion.div 
+
+      <motion.div
         className="absolute inset-0 bg-gradient-to-t from-slate-900/95 via-slate-900/0 to-slate-900/0 flex items-end justify-center pb-8"
         initial={{ opacity: 0 }}
         animate={{ opacity: isHovered ? 1 : 0 }}
         transition={{ duration: 0.3 }}
       >
-        <motion.div 
+        <motion.div
           className="bg-white/95 backdrop-blur-sm rounded-xl px-6 py-3 flex items-center gap-2.5 shadow-xl border border-white/20"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: isHovered ? 0 : 20, opacity: isHovered ? 1 : 0 }}
           transition={{ duration: 0.3, delay: 0.1 }}
         >
           <ZoomIn className="w-5 h-5 text-slate-700" strokeWidth={2} />
-          <span className="text-sm font-semibold text-slate-700">Ver en grande</span>
+          <span className="text-sm font-semibold text-slate-700">
+            Ver en grande
+          </span>
         </motion.div>
       </motion.div>
     </motion.button>
@@ -612,7 +649,7 @@ const ImageModal = ({
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const { lockScroll, unlockScroll } = useScrollLock();
-  
+
   useFocusTrap(isOpen, modalRef);
   useViewportHeight();
 
@@ -646,7 +683,9 @@ const ImageModal = ({
       }
     };
 
-    document.addEventListener("touchmove", preventTouchMove, { passive: false });
+    document.addEventListener("touchmove", preventTouchMove, {
+      passive: false,
+    });
 
     return () => {
       document.removeEventListener("touchmove", preventTouchMove);
@@ -677,9 +716,9 @@ const ImageModal = ({
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <motion.div
             className="absolute top-1/2 left-1/2 w-[600px] h-[600px] -translate-x-1/2 -translate-y-1/2 bg-violet-500/10 rounded-full blur-3xl"
-            animate={{ 
+            animate={{
               scale: [1, 1.1, 1],
-              opacity: [0.3, 0.5, 0.3]
+              opacity: [0.3, 0.5, 0.3],
             }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           />
@@ -715,7 +754,7 @@ const ImageModal = ({
           <X className="w-6 h-6" strokeWidth={2} />
         </motion.button>
 
-        <motion.div 
+        <motion.div
           className="fixed bottom-6 left-0 right-0 text-center px-4 pointer-events-none"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -771,12 +810,15 @@ const AddToCartButton = ({
         className={`
           relative w-full h-16 sm:h-[68px] text-lg font-semibold rounded-2xl
           overflow-hidden transition-all duration-500 group
-          ${isDisabled 
-            ? 'bg-slate-700/50 cursor-not-allowed opacity-60 border border-slate-600/30' 
-            : 'bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 border-0 shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50'
+          ${
+            isDisabled
+              ? "bg-slate-700/50 cursor-not-allowed opacity-60 border border-slate-600/30"
+              : "bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 border-0 shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50"
           }
         `}
-        aria-label={inCart ? "Producto agregado" : "Agregar producto a consulta"}
+        aria-label={
+          inCart ? "Producto agregado" : "Agregar producto a consulta"
+        }
         whileHover={!isDisabled ? { scale: 1.02 } : {}}
         whileTap={!isDisabled ? { scale: 0.98 } : {}}
       >
@@ -784,11 +826,11 @@ const AddToCartButton = ({
         {!isDisabled && (
           <motion.div
             className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-            animate={{ x: ['-100%', '100%'] }}
+            animate={{ x: ["-100%", "100%"] }}
             transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
           />
         )}
-        
+
         {/* Success pulse effect */}
         <AnimatePresence>
           {showSuccess && (
@@ -904,35 +946,32 @@ const ProductDetail = ({
   }, [product]);
 
   return (
-    <div 
+    <div
       className="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 relative overflow-hidden"
-      style={{
-        ...getSafeAreaStyle(),
-        minHeight: "100dvh",
-      }}
+      style={getSafeAreaStyle()}
     >
       {/* Enhanced background effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Primary gradient orb */}
         <motion.div
           className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-violet-500/8 rounded-full blur-3xl"
-          animate={{ 
+          animate={{
             scale: [1, 1.2, 1],
             x: [0, 50, 0],
             y: [0, 30, 0],
-            opacity: [0.4, 0.6, 0.4]
+            opacity: [0.4, 0.6, 0.4],
           }}
           transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
         />
-        
+
         {/* Secondary gradient orb */}
         <motion.div
           className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-fuchsia-500/8 rounded-full blur-3xl"
-          animate={{ 
+          animate={{
             scale: [1, 1.3, 1],
             x: [0, -50, 0],
             y: [0, -30, 0],
-            opacity: [0.4, 0.6, 0.4]
+            opacity: [0.4, 0.6, 0.4],
           }}
           transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -940,13 +979,13 @@ const ProductDetail = ({
         {/* Accent orb */}
         <motion.div
           className="absolute top-1/2 right-1/3 w-[350px] h-[350px] bg-cyan-500/6 rounded-full blur-3xl"
-          animate={{ 
+          animate={{
             scale: [1, 1.15, 1],
-            opacity: [0.3, 0.5, 0.3]
+            opacity: [0.3, 0.5, 0.3],
           }}
           transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
         />
-        
+
         {/* Subtle grid pattern */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(139,92,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(139,92,246,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
       </div>
@@ -961,7 +1000,10 @@ const ProductDetail = ({
           whileHover={{ x: -5 }}
           whileTap={{ scale: 0.95 }}
         >
-          <ArrowLeft className="w-5 h-5 transition-transform duration-300 group-hover:-translate-x-1" strokeWidth={2.5} />
+          <ArrowLeft
+            className="w-5 h-5 transition-transform duration-300 group-hover:-translate-x-1"
+            strokeWidth={2.5}
+          />
           Volver
         </motion.button>
 
@@ -998,14 +1040,19 @@ const ProductDetail = ({
                   onClick={handleOpenModal}
                 />
               ) : (
-                <motion.div 
+                <motion.div
                   className="w-full h-[350px] sm:h-[450px] lg:h-[550px] flex flex-col items-center justify-center text-slate-400 bg-slate-800/30 rounded-3xl border border-dashed border-slate-700/50 backdrop-blur-xl relative overflow-hidden"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-slate-700/5 via-transparent to-slate-600/5" />
-                  <ImageOff className="w-16 h-16 mb-3 relative z-10" strokeWidth={1.5} />
-                  <p className="text-lg font-medium relative z-10">Sin imagen disponible</p>
+                  <ImageOff
+                    className="w-16 h-16 mb-3 relative z-10"
+                    strokeWidth={1.5}
+                  />
+                  <p className="text-lg font-medium relative z-10">
+                    Sin imagen disponible
+                  </p>
                 </motion.div>
               )}
             </div>
@@ -1013,7 +1060,7 @@ const ProductDetail = ({
             {/* Product Info Section */}
             <div className="space-y-6">
               {/* Title & Stock */}
-              <motion.div 
+              <motion.div
                 className="space-y-4"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -1028,7 +1075,7 @@ const ProductDetail = ({
 
               {/* Description */}
               {product.description && (
-                <motion.div 
+                <motion.div
                   className="relative bg-slate-800/30 backdrop-blur-xl border border-slate-700/40 rounded-2xl p-6 overflow-hidden group hover:border-slate-600/50 transition-all duration-500"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -1036,10 +1083,13 @@ const ProductDetail = ({
                 >
                   {/* Subtle hover glow */}
                   <div className="absolute inset-0 bg-gradient-to-br from-violet-500/0 via-transparent to-fuchsia-500/0 group-hover:from-violet-500/5 group-hover:to-fuchsia-500/5 transition-all duration-500 pointer-events-none" />
-                  
+
                   <div className="relative z-10">
                     <div className="flex items-center gap-2 mb-3">
-                      <Sparkles className="w-4 h-4 text-violet-400" strokeWidth={2} />
+                      <Sparkles
+                        className="w-4 h-4 text-violet-400"
+                        strokeWidth={2}
+                      />
                       <h2 className="text-base font-semibold text-white">
                         Descripción
                       </h2>
@@ -1060,7 +1110,7 @@ const ProductDetail = ({
 
               {/* Image hint */}
               {product.image && (
-                <motion.p 
+                <motion.p
                   className="text-slate-400 text-center text-sm bg-slate-800/20 backdrop-blur-xl rounded-xl py-3 px-4 border border-slate-700/30"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -1072,7 +1122,7 @@ const ProductDetail = ({
 
               {/* Out of stock notice */}
               {!product.inStock && (
-                <motion.div 
+                <motion.div
                   className="relative bg-amber-500/10 border border-amber-500/30 backdrop-blur-xl p-5 rounded-2xl overflow-hidden"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -1080,9 +1130,9 @@ const ProductDetail = ({
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-amber-400/5 to-transparent pointer-events-none" />
                   <p className="text-amber-200 text-sm font-medium leading-relaxed relative z-10">
-                    ⚠️ Este producto no está disponible actualmente. Puedes agregarlo
-                    a tu consulta para recibir notificaciones cuando vuelva a estar
-                    en stock.
+                    ⚠️ Este producto no está disponible actualmente. Puedes
+                    agregarlo a tu consulta para recibir notificaciones cuando
+                    vuelva a estar en stock.
                   </p>
                 </motion.div>
               )}
