@@ -9,18 +9,16 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import {
-  useState,
-  useCallback,
-  useMemo,
-  useEffect,
-  useRef,
-  type CSSProperties,
-} from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -66,6 +64,8 @@ interface ApiError extends Error {
 ================================= */
 const TOAST_DURATION = 2000;
 const CLEAR_CART_DELAY = 500;
+const ANIMATION_DURATION = 0.2;
+const ITEM_ANIMATION_DELAY = 0.05;
 
 /* ================================
    HELPERS & UTILITIES
@@ -96,39 +96,20 @@ const isSafariBrowser = (): boolean => {
   return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 };
 
-/**
- * Abre WhatsApp de forma robusta.
- * - iOS / Safari: conviene navegación directa.
- * - Otros: intenta usar una ventana pre-abierta (para evitar bloqueo por popup post-await)
- */
-const navigateToWhatsApp = (
-  url: string,
-  preOpenedWindow?: Window | null
-): void => {
+const openWhatsApp = (url: string): void => {
   const needsDirectNavigation = isIOSDevice() || isSafariBrowser();
 
   if (needsDirectNavigation) {
     window.location.href = url;
-    return;
-  }
-
-  if (preOpenedWindow && !preOpenedWindow.closed) {
-    try {
-      preOpenedWindow.location.href = url;
-      preOpenedWindow.focus();
-      return;
-    } catch {
-      // si falla, cae al fallback
+  } else {
+    const newWindow = window.open(url, "_blank", "noopener,noreferrer");
+    if (!newWindow) {
+      window.location.href = url;
     }
-  }
-
-  const newWindow = window.open(url, "_blank", "noopener,noreferrer");
-  if (!newWindow) {
-    window.location.href = url;
   }
 };
 
-const getSafeAreaStyle = (): CSSProperties => {
+const getSafeAreaStyle = (): React.CSSProperties => {
   return {
     paddingTop: "env(safe-area-inset-top)",
     paddingBottom: "env(safe-area-inset-bottom)",
@@ -219,6 +200,7 @@ const CartHeader = ({
           <span className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
             Mi Consulta
           </span>
+          <div className="h-0.5 w-0 group-hover:w-full bg-gradient-to-r from-cyan-500/50 to-purple-500/50 transition-all duration-500" />
         </div>
       </div>
 
@@ -233,7 +215,7 @@ const CartHeader = ({
 
         <motion.button
           onClick={onClose}
-          className="p-2 rounded-xl bg-slate-800/60 border border-slate-600/30 hover:border-pink-500/40 text-slate-400 hover:text-pink-400 transition-all duration-300 group relative"
+          className="p-2 rounded-xl bg-slate-800/60 border border-slate-600/30 hover:border-pink-500/40 text-slate-400 hover:text-pink-400 transition-all duration-300 group"
           whileHover={{ scale: 1.05, rotate: 90 }}
           whileTap={{ scale: 0.95 }}
         >
@@ -520,96 +502,74 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
 
   useScrollLock(isOpen);
 
-  const itemCount = useMemo(() => items.length, [items]);
-  const isEmpty = useMemo(() => items.length === 0, [items]);
+  const itemCount = useMemo(() => items.length, [items.length]);
+  const isEmpty = useMemo(() => items.length === 0, [items.length]);
 
-  const handleWhatsAppClick = useCallback(async () => {
-    if (isEmpty) return;
+const handleWhatsAppClick = useCallback(async () => {
+  if (isEmpty) return;
 
-    if (!WHATSAPP_NUMBER) {
-      toast({
-        title: "❌ Configuración faltante",
-        description: "No está configurado el número de WhatsApp",
-        variant: "destructive",
-      });
-      return;
+  if (!WHATSAPP_NUMBER) {
+    toast({
+      title: "❌ Configuración faltante",
+      description: "No está configurado el número de WhatsApp",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  const phone = formatPhoneNumber(WHATSAPP_NUMBER);
+
+  // ✅ 1. Abrimos WhatsApp inmediatamente (gesto del usuario)
+  const whatsappWindow = window.open(
+    `https://wa.me/${phone}`,
+    "_blank",
+    "noopener,noreferrer"
+  );
+
+  setIsLoading(true);
+
+  try {
+    // ✅ 2. Recién ahora hacemos el await
+    const consultationItems: ConsultationItem[] = items.map(item => ({
+      productId: item.id,
+      qty: item.quantity ?? 1,
+    }));
+
+    const response = await createConsultation(consultationItems);
+
+    if (!response.whatsappMessage) {
+      throw new Error("No se pudo generar el mensaje de WhatsApp");
     }
 
-    /**
-     * ✅ CLAVE: abrir ventana ANTES del await para evitar bloqueo de popups.
-     * Solo aplica en navegadores donde no conviene navegación directa (iOS/Safari).
-     */
-    let preOpenedWindow: Window | null = null;
-    const needsDirectNavigation = isIOSDevice() || isSafariBrowser();
-    if (!needsDirectNavigation) {
-      preOpenedWindow = window.open("about:blank", "_blank", "noopener,noreferrer");
-      // si el popup fue bloqueado, quedará null; tenemos fallback luego
-    }
-
-    setIsLoading(true);
-
-    try {
-      const consultationItems: ConsultationItem[] = items.map((item) => ({
-        productId: item.id,
-        qty: item.quantity ?? 1,
-      }));
-
-      const response = await createConsultation(consultationItems);
-
-      if (!response?.whatsappMessage) {
-        throw new Error("No se pudo generar el mensaje de WhatsApp");
-      }
-
-      const phone = formatPhoneNumber(WHATSAPP_NUMBER);
-      const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(
+    // ✅ 3. Redirigimos la pestaña ya abierta
+    whatsappWindow?.location.replace(
+      `https://wa.me/${phone}?text=${encodeURIComponent(
         response.whatsappMessage
-      )}`;
+      )}`
+    );
 
-      navigateToWhatsApp(whatsappUrl, preOpenedWindow);
+    clearCart();
+    onClose();
 
-      setTimeout(() => {
-        clearCart();
-        onClose();
-      }, CLEAR_CART_DELAY);
+    toast({
+      description: "Consulta enviada. Abriendo WhatsApp…",
+      duration: TOAST_DURATION,
+    });
 
-      toast({
-        description: (
-          <div className="flex items-center gap-3">
-            <div className="bg-emerald-500/20 p-2 rounded-lg border border-emerald-500/30">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-emerald-300">
-                Consulta enviada
-              </p>
-              <p className="text-xs text-slate-400">Abriendo WhatsApp...</p>
-            </div>
-          </div>
-        ),
-        duration: TOAST_DURATION,
-        className: "bg-slate-900/95 backdrop-blur-xl border border-emerald-500/40",
-      });
-    } catch (err: unknown) {
-      // si pre-abrimos ventana y falló el request, no la dejamos colgada
-      if (preOpenedWindow && !preOpenedWindow.closed) {
-        try {
-          preOpenedWindow.close();
-        } catch {
-          // no pasa nada
-        }
-      }
+  } catch (err) {
+    // ❌ Si algo falla, cerramos la pestaña
+    whatsappWindow?.close();
 
-      const errorMessage = extractErrorMessage(err);
-      toast({
-        title: "❌ Error al enviar",
-        description:
-          errorMessage || "No se pudo enviar la consulta. Intentá nuevamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isEmpty, items, clearCart, onClose, toast]);
+    toast({
+      title: "❌ Error al enviar",
+      description: extractErrorMessage(err),
+      variant: "destructive",
+    });
+  } finally {
+    setIsLoading(false);
+  }
+}, [isEmpty, items, clearCart, onClose, toast]);
+
 
   const handleRemove = useCallback(
     (id: string, name: string) => {
@@ -627,7 +587,8 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
           </div>
         ),
         duration: TOAST_DURATION,
-        className: "bg-slate-900/95 backdrop-blur-md border border-slate-700/50",
+        className:
+          "bg-slate-900/95 backdrop-blur-md border border-slate-700/50",
       });
     },
     [removeFromCart, toast]
