@@ -1,11 +1,7 @@
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import {
-  Trash2,
-  MessageCircle,
-  Loader2,
-  Package,
-} from "lucide-react";
+import { Trash2, MessageCircle, Loader2, Package } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
+
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -50,21 +46,33 @@ interface ConsultationItem {
   qty: number;
 }
 
-interface ConsultationResponse {
-  whatsappMessage: string;
+interface ConsultationResponseRoot {
+  whatsappMessage?: string;
+  message?: string;
+  data?: {
+    whatsappMessage?: string;
+  };
 }
 
 /* ================================
    HELPERS
 ================================ */
-const formatPhoneNumber = (phone: string): string =>
+const normalizePhone = (phone: string): string =>
   phone.replace(/\D/g, "");
 
+const extractWhatsappMessage = (
+  response: ConsultationResponseRoot
+): string | null => {
+  if (response.whatsappMessage) return response.whatsappMessage;
+  if (response.data?.whatsappMessage) return response.data.whatsappMessage;
+  if (response.message) return response.message;
+  return null;
+};
+
 /* ================================
-   MAIN COMPONENT
+   COMPONENT
 ================================ */
 const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
-  // 👉 SIN genéricos: el contexto ya está tipado internamente
   const { items, removeFromCart, clearCart } = useCart();
   const { toast } = useToast();
   const reduceMotion = useReducedMotion() ?? false;
@@ -76,16 +84,16 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
   const isEmpty = itemCount === 0;
 
   /* ================================
-     WHATSAPP HANDLER (FINAL)
+     WHATSAPP HANDLER (ANTI BLOQUEO)
   ================================ */
   const handleWhatsAppClick = useCallback(async (): Promise<void> => {
     if (isEmpty || !WHATSAPP_NUMBER) return;
 
-    const phone = formatPhoneNumber(WHATSAPP_NUMBER);
+    const phone = normalizePhone(WHATSAPP_NUMBER);
 
-    // ✅ 1. Abrimos una pestaña EN BLANCO (gesto del usuario)
+    // ⚠️ abrir ventana SIN await
     const whatsappWindow: Window | null = window.open(
-      "about:blank",
+      "",
       "_blank",
       "noopener,noreferrer"
     );
@@ -93,28 +101,22 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
     setIsLoading(true);
 
     try {
-      // 2. Construimos payload
-      const consultationItems: ConsultationItem[] = items.map(
-        (item: CartItem) => ({
-          productId: item.id,
-          qty: item.quantity ?? 1,
-        })
-      );
+      const payload: ConsultationItem[] = items.map((item: CartItem) => ({
+        productId: item.id,
+        qty: item.quantity ?? 1,
+      }));
 
-      // 3. Llamada al backend
-      const response = (await createConsultation(
-        consultationItems
-      )) as ConsultationResponse;
+      const response: ConsultationResponseRoot =
+        await createConsultation(payload);
 
-      if (!response.whatsappMessage) {
+      const message = extractWhatsappMessage(response);
+
+      if (!message) {
         throw new Error("No se pudo generar el mensaje de WhatsApp");
       }
 
-      // 4. Navegamos UNA sola vez con el mensaje completo
       whatsappWindow?.location.replace(
-        `https://wa.me/${phone}?text=${encodeURIComponent(
-          response.whatsappMessage
-        )}`
+        `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
       );
 
       clearCart();
@@ -125,17 +127,16 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
         duration: 2000,
       });
     } catch (error: unknown) {
-      // Si falla, cerramos la pestaña en blanco
       whatsappWindow?.close();
 
-      const message =
+      const description =
         error instanceof Error
           ? error.message
           : "No se pudo enviar la consulta";
 
       toast({
         title: "❌ Error",
-        description: message,
+        description,
         variant: "destructive",
       });
     } finally {
@@ -159,7 +160,7 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
       <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
         <SheetContent className="w-full sm:max-w-lg flex flex-col bg-slate-950">
           <SheetHeader>
-            <SheetTitle className="flex justify-between items-center">
+            <SheetTitle className="flex items-center justify-between">
               <span className="text-xl font-bold">Mi Consulta</span>
               <Badge>{itemCount}</Badge>
             </SheetTitle>
@@ -171,27 +172,23 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
             </div>
           ) : (
             <>
-              <div className="flex-1 overflow-y-auto space-y-3 py-4">
+              <div className="flex-1 overflow-y-auto py-4 space-y-3">
                 <AnimatePresence>
                   {items.map((item: CartItem, index: number) => (
                     <motion.div
                       key={item.id}
-                      initial={
-                        !reduceMotion ? { opacity: 0, y: 10 } : undefined
-                      }
-                      animate={
-                        !reduceMotion ? { opacity: 1, y: 0 } : undefined
-                      }
+                      initial={!reduceMotion ? { opacity: 0, y: 10 } : undefined}
+                      animate={!reduceMotion ? { opacity: 1, y: 0 } : undefined}
                       exit={!reduceMotion ? { opacity: 0 } : undefined}
-                      transition={{ delay: index * 0.05 }}
-                      className="flex items-center gap-4 bg-slate-800/40 p-4 rounded-xl"
+                      transition={{ delay: index * 0.04 }}
+                      className="flex items-center gap-4 p-4 rounded-xl bg-slate-800/40"
                     >
-                      <div className="w-16 h-16 bg-slate-700 rounded-xl flex items-center justify-center">
+                      <div className="w-16 h-16 rounded-xl bg-slate-700 flex items-center justify-center overflow-hidden">
                         {item.image ? (
                           <img
                             src={item.image}
                             alt={item.name}
-                            className="w-full h-full object-cover rounded-xl"
+                            className="w-full h-full object-cover"
                           />
                         ) : (
                           <Package className="text-slate-400" />
@@ -225,7 +222,7 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                 >
                   {isLoading ? (
                     <>
-                      <Loader2 className="animate-spin mr-2" />
+                      <Loader2 className="mr-2 animate-spin" />
                       Enviando…
                     </>
                   ) : (
@@ -238,8 +235,8 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
 
                 <Button
                   variant="outline"
-                  onClick={() => setShowClearDialog(true)}
                   className="w-full"
+                  onClick={() => setShowClearDialog(true)}
                 >
                   Vaciar consulta
                 </Button>
