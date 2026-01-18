@@ -523,7 +523,6 @@ const LoadingSpinner = ({ message }: { message?: string }) => (
     >
       <Loader2 className="w-14 h-14 text-violet-400" strokeWidth={2} />
     </motion.div>
-    <p className="text-slate-300 text-lg font-medium">{message || "Cargando..."}</p>
   </div>
 );
 
