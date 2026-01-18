@@ -1,5 +1,5 @@
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Trash2, MessageCircle, ShoppingBag, Loader2, Package, CheckCircle2, Sparkles } from "lucide-react";
+import { Trash2, MessageCircle, ShoppingBag, Loader2, Package, CheckCircle2 } from "lucide-react";
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
@@ -139,103 +139,35 @@ const useScrollLock = (isLocked: boolean) => {
    SUB-COMPONENTS
 ================================= */
 const CartHeader = ({ itemCount }: { itemCount: number }) => (
-  <SheetHeader className="pb-6 border-b border-slate-200/10 relative">
-    {/* Subtle glow effect */}
-    <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 via-fuchsia-500/5 to-violet-500/5 blur-2xl" />
-    
-    <SheetTitle className="flex items-center justify-between gap-3 relative z-10">
-      <motion.div 
-        className="flex items-center gap-3"
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
-      >
-        <div className="relative p-2.5 rounded-xl bg-gradient-to-br from-violet-500/15 to-fuchsia-500/15 border border-violet-400/20 shadow-lg shadow-violet-500/10">
-          <ShoppingBag className="w-5 h-5 text-violet-300" />
-          <motion.div
-            className="absolute inset-0 rounded-xl bg-gradient-to-br from-violet-400/20 to-fuchsia-400/20"
-            animate={{ 
-              opacity: [0.3, 0.6, 0.3],
-            }}
-            transition={{ 
-              duration: 2.5, 
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          />
+  <SheetHeader className="pb-5 border-b border-slate-700/50">
+    <SheetTitle className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-3">
+        <div className="p-2.5 rounded-xl bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 border border-violet-500/20">
+          <ShoppingBag className="w-5 h-5 text-violet-400" />
         </div>
-        <span className="text-xl font-bold bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent">
+        <span className="text-xl font-bold text-white">
           Mi Consulta
         </span>
-      </motion.div>
-      
-      <motion.div
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ 
-          type: "spring", 
-          stiffness: 500, 
-          damping: 25,
-          delay: 0.2 
-        }}
-      >
-        <Badge className="relative px-3.5 py-1.5 bg-gradient-to-r from-violet-500/90 to-fuchsia-500/90 text-white border-0 font-semibold shadow-lg shadow-violet-500/25 overflow-hidden">
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0"
-            animate={{ x: ["-200%", "200%"] }}
-            transition={{ 
-              duration: 3, 
-              repeat: Infinity,
-              ease: "linear",
-              repeatDelay: 2
-            }}
-          />
-          <span className="relative z-10">{itemCount}</span>
-        </Badge>
-      </motion.div>
+      </div>
+      <Badge className="px-3 py-1 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white border-0 font-semibold">
+        {itemCount}
+      </Badge>
     </SheetTitle>
   </SheetHeader>
 );
 
 const EmptyCart = () => (
-  <motion.div 
-    className="flex-1 flex flex-col items-center justify-center gap-6 py-12"
-    initial={{ opacity: 0, scale: 0.9 }}
-    animate={{ opacity: 1, scale: 1 }}
-    transition={{ duration: 0.4 }}
-  >
-    <motion.div 
-      className="relative p-8 rounded-2xl bg-gradient-to-br from-slate-800/30 to-slate-700/20 border border-slate-600/30 shadow-2xl"
-      animate={{ 
-        y: [0, -8, 0],
-      }}
-      transition={{ 
-        duration: 3, 
-        repeat: Infinity,
-        ease: "easeInOut"
-      }}
-    >
-      <ShoppingBag className="w-16 h-16 text-slate-500" />
-      <motion.div
-        className="absolute inset-0 rounded-2xl bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10"
-        animate={{ 
-          opacity: [0.3, 0.6, 0.3],
-        }}
-        transition={{ 
-          duration: 2, 
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      />
-    </motion.div>
-    
-    <div className="text-center space-y-2">
-      <p className="text-lg font-semibold bg-gradient-to-r from-slate-200 to-slate-400 bg-clip-text text-transparent">
+  <div className="flex-1 flex flex-col items-center justify-center gap-5 py-12">
+    <div className="p-7 rounded-2xl bg-slate-800/30 border border-slate-700/50">
+      <ShoppingBag className="w-16 h-16 text-slate-600" />
+    </div>
+    <div className="text-center space-y-1.5">
+      <p className="text-lg font-semibold text-white">
         Tu consulta está vacía
       </p>
-      <p className="text-sm text-slate-500">Agregá productos para consultar</p>
+      <p className="text-sm text-slate-400">Agregá productos para consultar</p>
     </div>
-  </motion.div>
+  </div>
 );
 
 const CartItemImage = ({ src, alt }: { src?: string; alt: string }) => {
@@ -243,24 +175,22 @@ const CartItemImage = ({ src, alt }: { src?: string; alt: string }) => {
 
   if (!src || hasError) {
     return (
-      <div className="w-20 h-20 flex items-center justify-center rounded-xl bg-gradient-to-br from-slate-700/50 to-slate-800/50 flex-shrink-0 border border-slate-600/40 relative overflow-hidden">
-        <Package className="w-8 h-8 text-slate-500 relative z-10" />
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-fuchsia-500/5" />
+      <div className="w-20 h-20 flex items-center justify-center rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 flex-shrink-0 border border-slate-600/50">
+        <Package className="w-8 h-8 text-slate-500" />
       </div>
     );
   }
 
   return (
-    <div className="relative w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden border border-slate-600/40 shadow-lg group-hover:border-violet-500/30 transition-colors duration-300">
+    <div className="relative w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden border border-slate-600/50">
       <img
         src={src}
         alt={alt}
         onError={() => setHasError(true)}
-        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+        className="w-full h-full object-cover"
         loading="lazy"
         decoding="async"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
     </div>
   );
 };
@@ -283,67 +213,44 @@ const CartItemCard = ({
   return (
     <motion.div
       key={item.id}
-      layout
-      initial={reduceMotion ? undefined : { opacity: 0, x: -20 }}
-      animate={reduceMotion ? undefined : { opacity: 1, x: 0 }}
-      exit={reduceMotion ? undefined : { 
-        opacity: 0, 
-        x: 20,
-        transition: { duration: 0.2 }
-      }}
+      initial={reduceMotion ? undefined : { opacity: 0, y: 10 }}
+      animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+      exit={reduceMotion ? undefined : { opacity: 0, scale: 0.95 }}
       transition={
         reduceMotion
           ? undefined
           : {
-              duration: 0.3,
-              delay: index * 0.04,
-              ease: "easeOut"
+              duration: 0.2,
+              delay: index * 0.03,
             }
       }
-      className="group relative flex items-center gap-4 p-4 rounded-xl bg-gradient-to-br from-slate-800/40 to-slate-800/20 border border-slate-700/40 hover:border-violet-500/30 transition-all duration-300 overflow-hidden"
-      whileHover={reduceMotion ? undefined : { 
-        scale: 1.01,
-        transition: { duration: 0.2 }
-      }}
+      className="group flex items-center gap-3.5 p-3.5 rounded-xl bg-slate-800/40 border border-slate-700/50 hover:bg-slate-800/60 hover:border-slate-600/60 transition-all duration-200"
     >
-      {/* Subtle hover glow */}
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-violet-500/0 via-violet-500/5 to-fuchsia-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-        initial={{ x: "-100%" }}
-        whileHover={{ x: "100%" }}
-        transition={{ duration: 1.5, ease: "easeInOut" }}
-      />
-
       <CartItemImage src={item.image} alt={item.name} />
 
-      <div className="flex-1 min-w-0 relative z-10">
-        <p className="font-semibold text-sm text-slate-100 line-clamp-2 leading-snug mb-2 group-hover:text-white transition-colors duration-200">
+      <div className="flex-1 min-w-0">
+        <p className="font-semibold text-sm text-white line-clamp-2 leading-snug mb-1.5">
           {item.name}
         </p>
         {item.category && (
           <Badge
             variant="secondary"
-            className="text-xs bg-violet-500/15 text-violet-300 border-violet-500/25 hover:bg-violet-500/20 transition-colors duration-200"
+            className="text-xs bg-violet-500/15 text-violet-300 border-violet-500/25"
           >
             {item.category}
           </Badge>
         )}
       </div>
 
-      <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+      <Button
+        size="icon"
+        variant="ghost"
+        onClick={handleRemove}
+        className="min-w-[44px] min-h-[44px] rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border border-rose-500/25 hover:border-rose-500/40 transition-all flex-shrink-0 touch-manipulation"
+        aria-label={`Eliminar ${item.name}`}
       >
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={handleRemove}
-          className="min-w-[44px] min-h-[44px] rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border border-rose-500/25 hover:border-rose-500/40 transition-all duration-200 flex-shrink-0 touch-manipulation relative z-10 hover:shadow-lg hover:shadow-rose-500/20"
-          aria-label={`Eliminar ${item.name}`}
-        >
-          <Trash2 className="w-4.5 h-4.5" />
-        </Button>
-      </motion.div>
+        <Trash2 className="w-4.5 h-4.5" />
+      </Button>
     </motion.div>
   );
 };
@@ -357,69 +264,36 @@ const CartActions = ({
   onClearClick: () => void;
   isLoading: boolean;
 }) => (
-  <div className="pt-6 border-t border-slate-200/10 space-y-3 relative">
-    {/* Subtle top glow */}
-    <div className="absolute top-0 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-violet-500/30 to-transparent" />
-    
-    <motion.div
-      whileHover={{ scale: 1.01 }}
-      whileTap={{ scale: 0.99 }}
+  <div className="pt-5 border-t border-slate-700/50 space-y-2.5">
+    <Button
+      onClick={onWhatsAppClick}
+      disabled={isLoading}
+      size="lg"
+      className="relative w-full h-14 text-base font-semibold overflow-hidden bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white border-0 shadow-lg shadow-emerald-900/30 touch-manipulation disabled:opacity-50 transition-all duration-200"
     >
-      <Button
-        onClick={onWhatsAppClick}
-        disabled={isLoading}
-        size="lg"
-        className="relative w-full h-14 text-base font-semibold overflow-hidden bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white border-0 shadow-xl shadow-emerald-900/30 touch-manipulation disabled:opacity-50 transition-all duration-300 group"
-      >
-        {/* Animated gradient overlay */}
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-          animate={{ x: ["-200%", "200%"] }}
-          transition={{ 
-            duration: 3, 
-            repeat: Infinity,
-            ease: "linear",
-            repeatDelay: 1
-          }}
-        />
-        
-        {isLoading ? (
-          <>
-            <Loader2 className="w-5 h-5 mr-2 animate-spin relative z-10" />
-            <span className="relative z-10">Enviando…</span>
-          </>
-        ) : (
-          <>
-            <MessageCircle className="w-5 h-5 mr-2 relative z-10 group-hover:scale-110 transition-transform duration-200" />
-            <span className="relative z-10">Consultar por WhatsApp</span>
-            <motion.div
-              className="absolute right-4"
-              initial={{ opacity: 0, x: -10 }}
-              whileHover={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Sparkles className="w-4 h-4 text-white/60" />
-            </motion.div>
-          </>
-        )}
-      </Button>
-    </motion.div>
+      {isLoading ? (
+        <>
+          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+          Enviando…
+        </>
+      ) : (
+        <>
+          <MessageCircle className="w-5 h-5 mr-2" />
+          Consultar por WhatsApp
+        </>
+      )}
+    </Button>
 
-    <motion.div
-      whileHover={{ scale: 1.01 }}
-      whileTap={{ scale: 0.99 }}
+    <Button
+      variant="outline"
+      onClick={onClearClick}
+      size="lg"
+      className="w-full h-12 text-base font-semibold bg-slate-800/40 hover:bg-rose-500/10 text-slate-300 hover:text-rose-300 border-slate-700/50 hover:border-rose-500/40 transition-all duration-200 touch-manipulation"
+      aria-label="Vaciar consulta"
     >
-      <Button
-        variant="outline"
-        onClick={onClearClick}
-        size="lg"
-        className="w-full h-12 text-base font-semibold bg-slate-800/40 hover:bg-rose-500/10 text-slate-300 hover:text-rose-300 border-slate-700/40 hover:border-rose-500/30 transition-all duration-300 touch-manipulation hover:shadow-lg hover:shadow-rose-500/10 group"
-        aria-label="Vaciar consulta"
-      >
-        <Trash2 className="w-4.5 h-4.5 mr-2 group-hover:scale-110 transition-transform duration-200" />
-        Vaciar consulta
-      </Button>
-    </motion.div>
+      <Trash2 className="w-4.5 h-4.5 mr-2" />
+      Vaciar consulta
+    </Button>
   </div>
 );
 
@@ -433,56 +307,28 @@ const ClearConfirmDialog = ({
   onConfirm: () => void;
 }) => (
   <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
-    <AlertDialogContent className="bg-gradient-to-br from-slate-900/98 to-slate-800/98 backdrop-blur-xl border-slate-600/40 max-w-md shadow-2xl">
+    <AlertDialogContent className="bg-slate-900/98 backdrop-blur-xl border-slate-700/50 max-w-md">
       <AlertDialogHeader>
-        <AlertDialogTitle className="text-xl font-bold bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent flex items-center gap-3">
-          <motion.div 
-            className="p-2.5 rounded-lg bg-rose-500/15 border border-rose-500/25 relative overflow-hidden"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 500, damping: 25 }}
-          >
-            <Trash2 className="w-5 h-5 text-rose-400 relative z-10" />
-            <motion.div
-              className="absolute inset-0 bg-rose-500/20"
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
-          </motion.div>
+        <AlertDialogTitle className="text-xl font-bold text-white flex items-center gap-2.5">
+          <div className="p-2 rounded-lg bg-rose-500/15 border border-rose-500/25">
+            <Trash2 className="w-5 h-5 text-rose-400" />
+          </div>
           ¿Vaciar consulta?
         </AlertDialogTitle>
-        <AlertDialogDescription className="text-sm text-slate-400 leading-relaxed pt-3">
+        <AlertDialogDescription className="text-sm text-slate-400 leading-relaxed pt-2">
           Se eliminarán todos los productos de tu consulta. Esta acción no se puede deshacer.
         </AlertDialogDescription>
       </AlertDialogHeader>
-      <AlertDialogFooter className="gap-3 sm:gap-3 pt-2">
-        <motion.div 
-          className="flex-1"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+      <AlertDialogFooter className="gap-2.5 sm:gap-2.5">
+        <AlertDialogCancel className="flex-1 h-11 text-sm font-semibold bg-slate-800/60 hover:bg-slate-800 text-slate-300 border-slate-700/50 hover:border-slate-600 touch-manipulation">
+          Cancelar
+        </AlertDialogCancel>
+        <AlertDialogAction
+          onClick={onConfirm}
+          className="flex-1 h-11 text-sm font-semibold bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white touch-manipulation"
         >
-          <AlertDialogCancel className="w-full h-11 text-sm font-semibold bg-slate-800/60 hover:bg-slate-700/60 text-slate-300 border-slate-600/40 hover:border-slate-500/40 touch-manipulation transition-all duration-200">
-            Cancelar
-          </AlertDialogCancel>
-        </motion.div>
-        <motion.div 
-          className="flex-1"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <AlertDialogAction
-            onClick={onConfirm}
-            className="w-full h-11 text-sm font-semibold bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white touch-manipulation shadow-lg shadow-rose-900/30 transition-all duration-200 relative overflow-hidden group"
-          >
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-              initial={{ x: "-100%" }}
-              whileHover={{ x: "100%" }}
-              transition={{ duration: 0.6 }}
-            />
-            <span className="relative z-10">Vaciar</span>
-          </AlertDialogAction>
-        </motion.div>
+          Vaciar
+        </AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>
   </AlertDialog>
@@ -618,42 +464,36 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
     <>
       <Sheet open={isOpen} onOpenChange={onClose}>
         <SheetContent
-          className="w-full sm:max-w-lg flex flex-col bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 backdrop-blur-xl border-slate-600/30 relative overflow-hidden"
+          className="w-full sm:max-w-lg flex flex-col bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 backdrop-blur-xl border-slate-700/50"
           style={getSafeAreaStyle()}
         >
-          {/* Ambient background effects */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-violet-500/5 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-fuchsia-500/5 rounded-full blur-3xl pointer-events-none" />
-          
-          <div className="relative z-10 flex flex-col h-full">
-            <CartHeader itemCount={itemCount} />
+          <CartHeader itemCount={itemCount} />
 
-            {isEmpty ? (
-              <EmptyCart />
-            ) : (
-              <>
-                <div className="flex-1 overflow-y-auto py-5 space-y-3 scrollbar-thin scrollbar-thumb-slate-700/50 scrollbar-track-transparent hover:scrollbar-thumb-slate-600/50 transition-colors">
-                  <AnimatePresence mode="popLayout">
-                    {items.map((item, index) => (
-                      <CartItemCard
-                        key={item.id}
-                        item={item}
-                        index={index}
-                        onRemove={handleRemove}
-                        reduceMotion={prefersReducedMotion}
-                      />
-                    ))}
-                  </AnimatePresence>
-                </div>
+          {isEmpty ? (
+            <EmptyCart />
+          ) : (
+            <>
+              <div className="flex-1 overflow-y-auto py-5 space-y-2.5 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+                <AnimatePresence mode="popLayout">
+                  {items.map((item, index) => (
+                    <CartItemCard
+                      key={item.id}
+                      item={item}
+                      index={index}
+                      onRemove={handleRemove}
+                      reduceMotion={prefersReducedMotion}
+                    />
+                  ))}
+                </AnimatePresence>
+              </div>
 
-                <CartActions
-                  onWhatsAppClick={handleWhatsAppClick}
-                  onClearClick={handleClearClick}
-                  isLoading={isLoading}
-                />
-              </>
-            )}
-          </div>
+              <CartActions
+                onWhatsAppClick={handleWhatsAppClick}
+                onClearClick={handleClearClick}
+                isLoading={isLoading}
+              />
+            </>
+          )}
         </SheetContent>
       </Sheet>
 

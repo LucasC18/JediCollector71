@@ -686,46 +686,52 @@ const Home = () => {
 
       <Navbar onCartClick={handleCartOpen} />
 
-      <section
-        className="relative flex items-center justify-center overflow-hidden"
-        style={{ minHeight: getViewportHeight() }}
-      >
-        <HeroBackground
-          imageSrc={heroImage}
-          prefersReducedMotion={prefersReducedMotion}
-        />
+<section
+  className="relative flex items-center justify-center overflow-hidden"
+  style={{ minHeight: getViewportHeight() }}
+>
+  <HeroBackground
+    imageSrc={heroImage}
+    prefersReducedMotion={prefersReducedMotion}
+  />
 
-        <div className="relative z-10 w-full max-w-5xl mx-auto px-6 py-20 flex flex-col items-center justify-center text-center min-h-[calc(100dvh-64px)]">
-          <div className="w-full flex flex-col items-center flex-1 justify-center pb-20">
-            <HeroBadge />
-            <HeroTitle />
-            <HeroDescription />
+  {/* CONTENIDO */}
+  <div className="relative z-10 w-full max-w-5xl mx-auto px-6 py-20 flex flex-col items-center justify-center text-center min-h-[calc(100dvh-64px)]">
+    <div className="w-full flex flex-col items-center flex-1 justify-center pb-20">
+      <HeroBadge />
+      <HeroTitle />
+      <HeroDescription />
 
-            {!isLoadingCollections && collectionsError && (
-              <motion.p
-                className="text-sm text-rose-200 mb-6 bg-rose-500/12 border border-rose-500/30 rounded-xl px-5 py-2.5 backdrop-blur-sm"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                {collectionsError}
-              </motion.p>
-            )}
+      {!isLoadingCollections && collectionsError && (
+        <motion.p
+          className="text-sm text-rose-200 mb-6 bg-rose-500/12 border border-rose-500/30 rounded-xl px-5 py-2.5 backdrop-blur-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          {collectionsError}
+        </motion.p>
+      )}
 
-            <CollectionButtons
-              collections={collections}
-              isLoading={isLoadingCollections}
-              prefersReducedMotion={prefersReducedMotion}
-            />
+      <CollectionButtons
+        collections={collections}
+        isLoading={isLoadingCollections}
+        prefersReducedMotion={prefersReducedMotion}
+      />
 
-            <FeaturedButton onClick={handleScrollToFeatured} prefersReducedMotion={prefersReducedMotion} />
-          </div>
+      <FeaturedButton
+        onClick={handleScrollToFeatured}
+        prefersReducedMotion={prefersReducedMotion}
+      />
+    </div>
+  </div>
 
-          <ScrollIndicator 
-            prefersReducedMotion={prefersReducedMotion}
-            onClick={handleScrollToFeatured}
-          />
-        </div>
-      </section>
+  {/* INDICADOR (anclado al hero real) */}
+  <ScrollIndicator
+    prefersReducedMotion={prefersReducedMotion}
+    onClick={handleScrollToFeatured}
+  />
+</section>
+
 
       <main id="featured" className="relative w-full px-6 py-24">
         <div className="max-w-7xl mx-auto">
