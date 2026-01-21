@@ -724,12 +724,6 @@ const Home = () => {
       />
     </div>
   </div>
-
-  {/* INDICADOR (anclado al hero real) */}
-  <ScrollIndicator
-    prefersReducedMotion={prefersReducedMotion}
-    onClick={handleScrollToFeatured}
-  />
 </section>
 
 
