@@ -142,32 +142,59 @@ const CartHeader = ({ itemCount }: { itemCount: number }) => (
   <SheetHeader className="pb-5 border-b border-slate-700/50">
     <SheetTitle className="flex items-center justify-between gap-3">
       <div className="flex items-center gap-3">
-        <div className="p-2.5 rounded-xl bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 border border-violet-500/20">
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 200, damping: 15 }}
+          className="p-2.5 rounded-xl bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 border border-violet-500/20"
+        >
           <ShoppingBag className="w-5 h-5 text-violet-400" />
-        </div>
+        </motion.div>
         <span className="text-xl font-bold text-white">
           Mi Consulta
         </span>
       </div>
-      <Badge className="px-3 py-1 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white border-0 font-semibold">
-        {itemCount}
-      </Badge>
+      <motion.div
+        key={itemCount}
+        initial={{ scale: 1.2 }}
+        animate={{ scale: 1 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      >
+        <Badge className="px-3 py-1 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white border-0 font-semibold shadow-lg shadow-violet-500/25">
+          {itemCount}
+        </Badge>
+      </motion.div>
     </SheetTitle>
   </SheetHeader>
 );
 
 const EmptyCart = () => (
-  <div className="flex-1 flex flex-col items-center justify-center gap-5 py-12">
-    <div className="p-7 rounded-2xl bg-slate-800/30 border border-slate-700/50">
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.3 }}
+    className="flex-1 flex flex-col items-center justify-center gap-5 py-12"
+  >
+    <motion.div
+      initial={{ scale: 0.8 }}
+      animate={{ scale: 1 }}
+      transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+      className="p-7 rounded-2xl bg-slate-800/30 border border-slate-700/50"
+    >
       <ShoppingBag className="w-16 h-16 text-slate-600" />
-    </div>
-    <div className="text-center space-y-1.5">
+    </motion.div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.2 }}
+      className="text-center space-y-1.5"
+    >
       <p className="text-lg font-semibold text-white">
         Tu consulta está vacía
       </p>
       <p className="text-sm text-slate-400">Agregá productos para consultar</p>
-    </div>
-  </div>
+    </motion.div>
+  </motion.div>
 );
 
 const CartItemImage = ({ src, alt }: { src?: string; alt: string }) => {
@@ -206,51 +233,86 @@ const CartItemCard = ({
   onRemove: (id: string, name: string) => void;
   reduceMotion: boolean;
 }) => {
+  const [isRemoving, setIsRemoving] = useState(false);
+
   const handleRemove = useCallback(() => {
-    onRemove(item.id, item.name);
+    setIsRemoving(true);
+    // Dar feedback visual inmediato antes de ejecutar
+    setTimeout(() => {
+      onRemove(item.id, item.name);
+    }, 150);
   }, [item.id, item.name, onRemove]);
 
   return (
     <motion.div
       key={item.id}
-      initial={reduceMotion ? undefined : { opacity: 0, y: 10 }}
-      animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-      exit={reduceMotion ? undefined : { opacity: 0, scale: 0.95 }}
+      layout
+      initial={reduceMotion ? undefined : { opacity: 0, x: -20 }}
+      animate={reduceMotion ? undefined : { 
+        opacity: isRemoving ? 0 : 1, 
+        x: isRemoving ? 20 : 0,
+        scale: isRemoving ? 0.95 : 1
+      }}
+      exit={reduceMotion ? undefined : { 
+        opacity: 0, 
+        x: 20,
+        scale: 0.9,
+        transition: { duration: 0.2 }
+      }}
       transition={
         reduceMotion
           ? undefined
           : {
-              duration: 0.2,
-              delay: index * 0.03,
+              duration: 0.25,
+              delay: index * 0.04,
+              type: "spring",
+              stiffness: 300,
+              damping: 25
             }
       }
-      className="group flex items-center gap-3.5 p-3.5 rounded-xl bg-slate-800/40 border border-slate-700/50 hover:bg-slate-800/60 hover:border-slate-600/60 transition-all duration-200"
+      className="group relative"
     >
-      <CartItemImage src={item.image} alt={item.name} />
-
-      <div className="flex-1 min-w-0">
-        <p className="font-semibold text-sm text-white line-clamp-2 leading-snug mb-1.5">
-          {item.name}
-        </p>
-        {item.category && (
-          <Badge
-            variant="secondary"
-            className="text-xs bg-violet-500/15 text-violet-300 border-violet-500/25"
-          >
-            {item.category}
-          </Badge>
-        )}
-      </div>
-
-      <Button
-        size="icon"
-        variant="ghost"
-        onClick={handleRemove}
-        className="min-w-[44px] min-h-[44px] rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border border-rose-500/25 hover:border-rose-500/40 transition-all flex-shrink-0 touch-manipulation"
-        aria-label={`Eliminar ${item.name}`}
+      <motion.div
+        whileTap={reduceMotion ? undefined : { scale: 0.98 }}
+        className="flex items-center gap-3.5 p-3.5 rounded-xl bg-slate-800/40 border border-slate-700/50 hover:bg-slate-800/70 hover:border-violet-500/30 hover:shadow-lg hover:shadow-violet-500/10 transition-all duration-300"
       >
-        <Trash2 className="w-4.5 h-4.5" />
-      </Button>
+        <CartItemImage src={item.image} alt={item.name} />
+
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-sm text-white line-clamp-2 leading-snug mb-1.5">
+            {item.name}
+          </p>
+          {item.category && (
+            <Badge
+              variant="secondary"
+              className="text-xs bg-violet-500/15 text-violet-300 border-violet-500/25"
+            >
+              {item.category}
+            </Badge>
+          )}
+        </div>
+
+        <motion.div
+          whileHover={reduceMotion ? undefined : { scale: 1.05 }}
+          whileTap={reduceMotion ? undefined : { scale: 0.95 }}
+        >
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={handleRemove}
+            disabled={isRemoving}
+            className="min-w-[44px] min-h-[44px] rounded-lg bg-rose-500/10 hover:bg-rose-500/20 active:bg-rose-500/30 text-rose-400 hover:text-rose-300 border border-rose-500/25 hover:border-rose-500/50 hover:shadow-lg hover:shadow-rose-500/20 transition-all duration-200 flex-shrink-0 touch-manipulation disabled:opacity-50"
+            aria-label={`Eliminar ${item.name}`}
+          >
+            <motion.div
+              animate={isRemoving ? { rotate: 90, opacity: 0 } : { rotate: 0, opacity: 1 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Trash2 className="w-4.5 h-4.5" />
+            </motion.div>
+          </Button>
+        </motion.div>
+      </motion.div>
     </motion.div>
   );
 };
@@ -264,37 +326,60 @@ const CartActions = ({
   onClearClick: () => void;
   isLoading: boolean;
 }) => (
-  <div className="pt-5 border-t border-slate-700/50 space-y-2.5">
-    <Button
-      onClick={onWhatsAppClick}
-      disabled={isLoading}
-      size="lg"
-      className="relative w-full h-14 text-base font-semibold overflow-hidden bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white border-0 shadow-lg shadow-emerald-900/30 touch-manipulation disabled:opacity-50 transition-all duration-200"
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: 0.2 }}
+    className="pt-5 border-t border-slate-700/50 space-y-2.5"
+  >
+    <motion.div
+      whileHover={isLoading ? undefined : { scale: 1.02 }}
+      whileTap={isLoading ? undefined : { scale: 0.98 }}
     >
-      {isLoading ? (
-        <>
-          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-          Enviando…
-        </>
-      ) : (
-        <>
-          <MessageCircle className="w-5 h-5 mr-2" />
-          Consultar por WhatsApp
-        </>
-      )}
-    </Button>
+      <Button
+        onClick={onWhatsAppClick}
+        disabled={isLoading}
+        size="lg"
+        className="relative w-full h-14 text-base font-semibold overflow-hidden bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 active:from-emerald-700 active:to-green-700 text-white border-0 shadow-lg shadow-emerald-900/40 hover:shadow-xl hover:shadow-emerald-900/50 touch-manipulation disabled:opacity-50 transition-all duration-200"
+      >
+        {isLoading ? (
+          <>
+            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+            Enviando…
+          </>
+        ) : (
+          <>
+            <MessageCircle className="w-5 h-5 mr-2" />
+            Consultar por WhatsApp
+          </>
+        )}
+        {!isLoading && (
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0"
+            initial={{ x: '-100%' }}
+            whileHover={{ x: '100%' }}
+            transition={{ duration: 0.6, ease: "easeInOut" }}
+          />
+        )}
+      </Button>
+    </motion.div>
 
-    <Button
-      variant="outline"
-      onClick={onClearClick}
-      size="lg"
-      className="w-full h-12 text-base font-semibold bg-slate-800/40 hover:bg-rose-500/10 text-slate-300 hover:text-rose-300 border-slate-700/50 hover:border-rose-500/40 transition-all duration-200 touch-manipulation"
-      aria-label="Vaciar consulta"
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
     >
-      <Trash2 className="w-4.5 h-4.5 mr-2" />
-      Vaciar consulta
-    </Button>
-  </div>
+      <Button
+        variant="outline"
+        onClick={onClearClick}
+        size="lg"
+        className="w-full h-12 text-base font-semibold bg-slate-800/40 hover:bg-rose-500/10 active:bg-rose-500/20 text-slate-300 hover:text-rose-300 border-slate-700/50 hover:border-rose-500/40 hover:shadow-lg hover:shadow-rose-500/10 transition-all duration-200 touch-manipulation"
+        aria-label="Vaciar consulta"
+      >
+        <Trash2 className="w-4.5 h-4.5 mr-2" />
+        Vaciar consulta
+      </Button>
+    </motion.div>
+  </motion.div>
 );
 
 const ClearConfirmDialog = ({
@@ -310,9 +395,14 @@ const ClearConfirmDialog = ({
     <AlertDialogContent className="bg-slate-900/98 backdrop-blur-xl border-slate-700/50 max-w-md">
       <AlertDialogHeader>
         <AlertDialogTitle className="text-xl font-bold text-white flex items-center gap-2.5">
-          <div className="p-2 rounded-lg bg-rose-500/15 border border-rose-500/25">
+          <motion.div
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: "spring", stiffness: 200, damping: 15 }}
+            className="p-2 rounded-lg bg-rose-500/15 border border-rose-500/25"
+          >
             <Trash2 className="w-5 h-5 text-rose-400" />
-          </div>
+          </motion.div>
           ¿Vaciar consulta?
         </AlertDialogTitle>
         <AlertDialogDescription className="text-sm text-slate-400 leading-relaxed pt-2">
@@ -320,15 +410,27 @@ const ClearConfirmDialog = ({
         </AlertDialogDescription>
       </AlertDialogHeader>
       <AlertDialogFooter className="gap-2.5 sm:gap-2.5">
-        <AlertDialogCancel className="flex-1 h-11 text-sm font-semibold bg-slate-800/60 hover:bg-slate-800 text-slate-300 border-slate-700/50 hover:border-slate-600 touch-manipulation">
-          Cancelar
-        </AlertDialogCancel>
-        <AlertDialogAction
-          onClick={onConfirm}
-          className="flex-1 h-11 text-sm font-semibold bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white touch-manipulation"
+        <motion.div
+          className="flex-1"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
-          Vaciar
-        </AlertDialogAction>
+          <AlertDialogCancel className="w-full h-11 text-sm font-semibold bg-slate-800/60 hover:bg-slate-800 text-slate-300 border-slate-700/50 hover:border-slate-600 touch-manipulation">
+            Cancelar
+          </AlertDialogCancel>
+        </motion.div>
+        <motion.div
+          className="flex-1"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <AlertDialogAction
+            onClick={onConfirm}
+            className="w-full h-11 text-sm font-semibold bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 active:from-rose-700 active:to-red-700 text-white shadow-lg shadow-rose-500/25 hover:shadow-xl hover:shadow-rose-500/30 touch-manipulation transition-all duration-200"
+          >
+            Vaciar
+          </AlertDialogAction>
+        </motion.div>
       </AlertDialogFooter>
     </AlertDialogContent>
   </AlertDialog>

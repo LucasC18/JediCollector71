@@ -533,7 +533,7 @@ const ScrollIndicator = ({
         />
       </div>
       <span className="text-xs text-slate-300 font-medium opacity-70 group-hover:opacity-100 transition-opacity">
-        Scrolleá para ver más
+        Ver destacados
       </span>
     </div>
   </motion.button>
